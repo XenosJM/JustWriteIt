@@ -1,0 +1,319 @@
+/**
+ * 실전 시나리오: 메모 앱의 진화
+ * 버전 1 → 버전 2 → 버전 3
+ */
+
+// ========================================
+// 📱 버전 1.0 (초기 출시)
+// ========================================
+
+package com.example.datastoragedemo.v1
+
+import androidx.room.*
+
+// 간단한 메모만 저장
+@Entity(tableName = "notes")
+data class Note(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val title: String,
+    val content: String,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+@Database(entities = [Note::class], version = 1)
+abstract class NoteDatabase : RoomDatabase() {
+    abstract fun noteDao(): NoteDao
+}
+
+/*
+실제 테이블 구조:
+┌────┬────────────┬──────────┬────────────┐
+│ id │   title    │ content  │ createdAt  │
+├────┼────────────┼──────────┼────────────┤
+│ 1  │ 할일       │ 청소하기  │ 1234567890 │
+│ 2  │ 쇼핑       │ 우유 사기 │ 1234567891 │
+└────┴────────────┴──────────┴────────────┘
+*/
+
+// ========================================
+// 📱 버전 2.0 (카테고리 기능 추가)
+// ========================================
+
+package com.example.datastoragedemo.v2
+
+import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+
+// 카테고리 필드 추가
+@Entity(tableName = "notes")
+data class Note(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val title: String,
+    val content: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val category: String = "일반"  // ← 새 필드!
+)
+
+// 버전을 2로 증가
+@Database(entities = [Note::class], version = 2)
+abstract class NoteDatabase : RoomDatabase() {
+    abstract fun noteDao(): NoteDao
+
+    companion object {
+        // 마이그레이션 정의
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 기존 메모들에 "일반" 카테고리 자동 할당
+                db.execSQL(
+                    "ALTER TABLE notes ADD COLUMN category TEXT NOT NULL DEFAULT '일반'"
+                )
+            }
+        }
+
+        fun getDatabase(context: Context): NoteDatabase {
+            return Room.databaseBuilder(context, NoteDatabase::class.java, "note_db")
+                .addMigrations(MIGRATION_1_2)  // 마이그레이션 추가!
+                .build()
+        }
+    }
+}
+
+/*
+업그레이드 후 테이블:
+┌────┬────────────┬──────────┬────────────┬──────────┐
+│ id │   title    │ content  │ createdAt  │ category │
+├────┼────────────┼──────────┼────────────┼──────────┤
+│ 1  │ 할일       │ 청소하기  │ 1234567890 │ 일반     │ ← 자동 추가
+│ 2  │ 쇼핑       │ 우유 사기 │ 1234567891 │ 일반     │ ← 자동 추가
+│ 3  │ 회의       │ 내일 2시 │ 1234567892 │ 업무     │ ← 새 메모
+└────┴────────────┴──────────┴────────────┴──────────┘
+*/
+
+// ========================================
+// 📱 버전 3.0 (중요도 + 수정일 추가)
+// ========================================
+
+package com.example.datastoragedemo.v3
+
+import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+
+@Entity(tableName = "notes")
+data class Note(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val title: String,
+    val content: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),  // ← 새 필드!
+    val category: String = "일반",
+    val isImportant: Boolean = false  // ← 새 필드!
+)
+
+@Database(entities = [Note::class], version = 3)
+abstract class NoteDatabase : RoomDatabase() {
+    abstract fun noteDao(): NoteDao
+
+    companion object {
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notes ADD COLUMN category TEXT NOT NULL DEFAULT '일반'")
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 수정일 추가 (생성일과 동일하게 설정)
+                db.execSQL(
+                    "ALTER TABLE notes ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0"
+                )
+                // 기존 데이터의 updatedAt을 createdAt으로 초기화
+                db.execSQL(
+                    "UPDATE notes SET updatedAt = createdAt"
+                )
+
+                // 중요도 추가 (기본값: false = 0)
+                db.execSQL(
+                    "ALTER TABLE notes ADD COLUMN isImportant INTEGER NOT NULL DEFAULT 0"
+                )
+            }
+        }
+
+        fun getDatabase(context: Context): NoteDatabase {
+            return Room.databaseBuilder(context, NoteDatabase::class.java, "note_db")
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)  // 모든 마이그레이션!
+                .build()
+        }
+    }
+}
+
+/*
+최종 테이블:
+┌────┬──────┬─────┬──────────┬──────────┬────────┬───────────┐
+│ id │title │cont │createdAt │updatedAt │category│isImportant│
+├────┼──────┼─────┼──────────┼──────────┼────────┼───────────┤
+│ 1  │할일  │청소 │1234567890│1234567890│일반    │ 0 (false) │
+│ 2  │쇼핑  │우유 │1234567891│1234567891│일반    │ 0 (false) │
+│ 3  │회의  │2시  │1234567892│1234567892│업무    │ 1 (true)  │
+└────┴──────┴─────┴──────────┴──────────┴────────┴───────────┘
+*/
+
+// ========================================
+// 사용자 입장에서 본 업그레이드
+// ========================================
+
+/*
+🧑 사용자 A (버전 1 → 버전 2 업그레이드)
+─────────────────────────────────────
+
+1. 버전 1 사용 중
+   - 메모 100개 저장됨
+
+2. 앱 업데이트 (버전 2 다운로드)
+
+3. 앱 실행
+   ✅ MIGRATION_1_2 자동 실행
+   ✅ 모든 메모에 category 컬럼 추가됨
+   ✅ 기존 100개 메모 모두 보존!
+   ✅ 사용자는 아무것도 몰라도 됨
+
+4. 새 기능 사용 가능
+   - 이제 카테고리 선택 가능
+
+
+🧑 사용자 B (버전 1 → 버전 3 직접 업그레이드)
+─────────────────────────────────────
+
+1. 버전 1 사용 중
+
+2. 버전 2 건너뛰고 버전 3으로 업데이트
+
+3. 앱 실행
+   ✅ MIGRATION_1_2 실행 (1→2)
+   ✅ MIGRATION_2_3 실행 (2→3)
+   ✅ 연쇄적으로 모든 마이그레이션 적용!
+   ✅ 데이터 손실 없음
+
+
+❌ 마이그레이션이 없다면?
+─────────────────────────
+
+1. 버전 1 사용 중 (메모 100개)
+
+2. 버전 2로 업데이트
+
+3. 앱 실행
+   💥 앱 크래시!
+   또는
+   💥 "데이터베이스를 열 수 없습니다" 에러
+   또는
+   💥 모든 메모 삭제됨 (fallbackToDestructiveMigration)
+*/
+
+// ========================================
+// 마이그레이션 흐름도
+// ========================================
+
+/*
+버전 1 DB
+    │
+    │ app 업데이트 감지
+    │
+    ├─→ MIGRATION_1_2.migrate() 실행
+    │   └─→ ALTER TABLE notes ADD COLUMN category...
+    │
+버전 2 DB
+    │
+    │ 다시 app 업데이트
+    │
+    ├─→ MIGRATION_2_3.migrate() 실행
+    │   ├─→ ALTER TABLE notes ADD COLUMN updatedAt...
+    │   ├─→ UPDATE notes SET updatedAt = createdAt
+    │   └─→ ALTER TABLE notes ADD COLUMN isImportant...
+    │
+버전 3 DB
+    │
+    ✅ 최신 상태!
+*/
+
+// ========================================
+// 개발자를 위한 디버깅 팁
+// ========================================
+
+/**
+ * 마이그레이션 로그 확인
+ */
+class NoteDatabase : RoomDatabase() {
+    companion object {
+        fun getDatabase(context: Context): NoteDatabase {
+            return Room.databaseBuilder(context, NoteDatabase::class.java, "note_db")
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                // 마이그레이션 성공/실패 로그
+                .setQueryCallback({ sqlQuery, bindArgs ->
+                    Log.d("RoomQuery", "SQL: $sqlQuery, Args: $bindArgs")
+                }, Executors.newSingleThreadExecutor())
+                .build()
+        }
+    }
+}
+
+/**
+ * 강제로 특정 버전으로 시작하기 (테스트용)
+ */
+fun testMigration(context: Context) {
+    // 기존 DB 삭제
+    context.deleteDatabase("note_db")
+
+    // 버전 1로 시작
+    val dbV1 = Room.databaseBuilder(context, NoteDatabase::class.java, "note_db")
+        .fallbackToDestructiveMigration()
+        .build()
+
+    // 데이터 삽입
+    // ...
+
+    dbV1.close()
+
+    // 버전 3로 업그레이드 테스트
+    val dbV3 = Room.databaseBuilder(context, NoteDatabase::class.java, "note_db")
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+        .build()
+
+    // 데이터 확인
+}
+
+// ========================================
+// 핵심 요약
+// ========================================
+
+/*
+🎯 마이그레이션 핵심 3가지:
+
+1. Entity 변경 → version 증가
+   @Database(version = 2)  // 1에서 2로
+
+2. Migration 객체 생성
+   val MIGRATION_X_Y = object : Migration(X, Y) { ... }
+
+3. Database에 등록
+   .addMigrations(MIGRATION_X_Y)
+
+
+💡 실무 팁:
+
+✅ DO:
+- 항상 마이그레이션 작성 (출시 후)
+- DEFAULT 값 설정
+- 마이그레이션 테스트 작성
+- 버전 관리 체계적으로
+
+❌ DON'T:
+- 출시 후 fallbackToDestructiveMigration 사용
+- NOT NULL 컬럼을 DEFAULT 없이 추가
+- 복잡한 로직을 마이그레이션에 넣기
+- 버전 번호 중복
+*/

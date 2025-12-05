@@ -1,0 +1,180 @@
+package com.badger.datastoragedemo
+
+import android.content.Context
+import android.content.SharedPreferences
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+
+
+class MainActivity : AppCompatActivity() {
+
+    // lateinit : 나중에 초기화 할 것임을 명시(java의 변수 선언과 유사)
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var editName: EditText
+    private lateinit var editAge: EditText
+    private lateinit var btnSave: Button
+    private lateinit var btnLoad: Button
+    private lateinit var btnClear: Button
+    private lateinit var txtResult: TextView
+
+    // 상수 정의 - companion object는 java의 static과 유사
+    companion object {
+        private const val PREF_NAME = "MyPreferences"
+        private const val KEY_NAME = "user_name"
+        private const val KEY_AGE = "user_age"
+        private const val KEY_LAST_SAVE = "last_save_time"
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+       setContentView(R.layout.activity_main)
+
+        // SharePreferences 초기화
+        // MODE_PRIVATE : 이 앱에서만 접근 가능
+        sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+
+        // View 초기화
+        initViews()
+
+        // 버튼 클릭 리스너 설정
+        setupListeners()
+
+        // 웹 시작시 저장된 데이터 자동 로드
+        loadData()
+    }
+
+    private fun initViews() {
+        editName = findViewById(R.id.editName)
+        editAge = findViewById(R.id.editAge)
+        btnSave = findViewById(R.id.btnSave)
+        btnLoad = findViewById(R.id.btnLoad)
+        btnClear = findViewById(R.id.btnClear)
+        txtResult = findViewById(R.id.txtResult)
+    }
+
+    private fun setupListeners() {
+        /*
+            private fun setupListeners() {
+                btnSave.setOnClickListener(object : View.OnClickListener {
+                    override fun onClick(v: View?) {
+                        saveData()
+                    }
+                })
+
+                btnLoad.setOnClickListener(object : View.OnClickListener {
+                    override fun onClick(v: View?) {
+                        loadData()
+                    }
+                })
+
+                btnClear.setOnClickListener(object : View.OnClickListener {
+                    override fun onClick(v: View?) {
+                        clearData()
+                    }
+                })
+            }
+        */
+        // 위 익명클래스에 대한 Kotlin의 람다 표현식 - java에 비해 훨씬 간결함
+        btnSave.setOnClickListener { saveData() }
+        btnLoad.setOnClickListener { loadData() }
+        btnClear.setOnClickListener { clearData() }
+    }
+
+    private fun saveData() {
+        val name = editName.text.toString()
+        val ageStr = editAge.text.toString()
+
+        // 입력 검증
+        if (name.isEmpty()) {
+            showToast("이름을 입력하세요")
+            return
+        }
+
+        if (ageStr.isEmpty()) {
+            showToast("나이를 입력하세요")
+            return
+        }
+
+        // toIntOrNull(): String을 Int로 변환하는 메서드(java의 Integer.perseInt()와 유사)
+        val age = ageStr.toIntOrNull() ?: 0 // 변환 실패시 0
+
+        // 데이터 저장 - apply()는 비동기, commit()은 동기
+        sharedPreferences.edit().apply {
+            putString(KEY_NAME, name)
+            putInt(KEY_AGE, age)
+            putLong(KEY_LAST_SAVE, System.currentTimeMillis())
+            apply() // 비동기로 저장(백그라운드)
+        }
+
+        showToast("저장 완료!")
+        loadData() // 저장후 바로 화면 업데이트
+    }
+
+    /*
+        데이터 불러오기
+        저장된 값이 없으면 기본값을 반환
+     */
+    private fun loadData() {
+        val name = sharedPreferences.getString(KEY_NAME, "저장된 이름 없음")
+        val age = sharedPreferences.getInt(KEY_AGE, 0)
+        val lastSave = sharedPreferences.getLong(KEY_LAST_SAVE, 0)
+
+        // 문자열 템플릿 - java의 String.formet()보다 편리하다.
+        val result = """
+            저장된 정보:
+            이름: $name
+            나이: $age
+            마지막 저장: ${formatTime(lastSave)}
+        """.trimIndent()
+
+        txtResult.text = result
+
+        // Elvis 연산자(?:) = null이면 기본값을 반환
+        editName.setText(name ?: "")
+        if (age > 0) {
+            editAge.setText(age.toString())
+        }
+    }
+
+    // 데이터 전체 삭제
+    private fun clearData() {
+        sharedPreferences.edit().clear().apply()
+
+        editName.setText("")
+        editAge.setText("")
+        txtResult.text = "모든 데이터가 삭제되었습니다."
+
+        showToast("데이터 삭제 완료")
+    }
+
+    // 타임 스탬프를 읽기 쉬운 형태로 변환하는 메서드
+    private fun formatTime(timestamp: Long): String {
+        if (timestamp == 0L) return "없음"
+
+        val sdf =  java.text.SimpleDateFormat(
+            "yyyy-MM-dd HH:mm:ss",
+            java.util.Locale.getDefault()
+        )
+        return sdf.format(java.util.Date(timestamp))
+    }
+
+    // Toast 메시지 표시 (확장 함수로 만들 수도 있음 - * 확장함수에 대해 알아보기)
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+}
+
+/*
+   Kotlin 주요 특징 정리:
+   1. val/var: 불변/가변 변수
+   2. ?: Elvis 연산자(null일 때 기본값 반환)
+   3. ?. safe call (null이 아닐 때만 호출)
+   4. lateinit: 나중에 초기화(java의 변수선언과 유사)
+   5. companion object: java의 static과 유사
+   6. 문자열 템플릿 : "$변수", "${표현식}"
+   7. apply, let, run 등 스코프함수 - *스코프 함수에 대해 알아보기.
+ */

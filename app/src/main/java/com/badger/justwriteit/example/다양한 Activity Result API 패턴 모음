@@ -1,0 +1,416 @@
+package com.example.datastoragedemo
+
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.provider.MediaStore
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+
+/**
+ * Activity Result API 완전 가이드
+ * 다양한 사용 패턴과 내장 계약(Contract) 모음
+ */
+class ActivityResultExamples : AppCompatActivity() {
+
+    // ========================================
+    // 패턴 1: 기본 Activity Result
+    // ========================================
+
+    /**
+     * 가장 기본적인 형태
+     * 모든 종류의 Activity 결과 받기
+     */
+    private val basicLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val data = result.data
+            // Intent에서 데이터 추출
+            val value = data?.getStringExtra("key")
+        }
+    }
+
+    fun launchBasicActivity() {
+        val intent = Intent(this, OtherActivity::class.java)
+        intent.putExtra("someData", "value")
+        basicLauncher.launch(intent)
+    }
+
+    // ========================================
+    // 패턴 2: 여러 런처 사용하기
+    // ========================================
+
+    /**
+     * 용도별로 런처를 나누면 코드가 명확해짐
+     */
+    private val addLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            // 추가 로직
+            handleAdd(result.data)
+        }
+    }
+
+    private val editLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            // 수정 로직
+            handleEdit(result.data)
+        }
+    }
+
+    private val deleteLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            // 삭제 로직
+            handleDelete(result.data)
+        }
+    }
+
+    private fun handleAdd(data: Intent?) { /* ... */ }
+    private fun handleEdit(data: Intent?) { /* ... */ }
+    private fun handleDelete(data: Intent?) { /* ... */ }
+
+    // ========================================
+    // 패턴 3: 내장 계약(Contract) 사용
+    // ========================================
+
+    /**
+     * GetContent - 파일 선택
+     * 갤러리에서 이미지 선택 등
+     */
+    private val pickImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        // uri: 선택된 파일의 URI
+        if (uri != null) {
+            // 이미지 로드
+            loadImage(uri)
+        }
+    }
+
+    fun pickImage() {
+        pickImageLauncher.launch("image/*")  // MIME 타입
+    }
+
+    /**
+     * GetMultipleContents - 여러 파일 선택
+     */
+    private val pickMultipleImagesLauncher = registerForActivityResult(
+        ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        // 여러 개의 URI 리스트
+        uris.forEach { uri ->
+            loadImage(uri)
+        }
+    }
+
+    fun pickMultipleImages() {
+        pickMultipleImagesLauncher.launch("image/*")
+    }
+
+    /**
+     * TakePicture - 카메라로 사진 찍기
+     */
+    private val takePictureLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success) {
+            // 사진이 저장된 URI 사용
+            // (launch()에 전달한 URI에 저장됨)
+        }
+    }
+
+    fun takePicture() {
+        // 사진을 저장할 URI 생성
+        val photoUri = createImageUri()
+        takePictureLauncher.launch(photoUri)
+    }
+
+    /**
+     * TakePicturePreview - 썸네일 사진
+     */
+    private val takePicturePreviewLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: android.graphics.Bitmap? ->
+        // 작은 Bitmap 직접 반환
+        if (bitmap != null) {
+            // ImageView에 표시
+            imageView.setImageBitmap(bitmap)
+        }
+    }
+
+    fun takePicturePreview() {
+        takePicturePreviewLauncher.launch(null)
+    }
+
+    /**
+     * RequestPermission - 권한 요청
+     */
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // 권한 허용됨
+            accessCamera()
+        } else {
+            // 권한 거부됨
+            showPermissionDeniedMessage()
+        }
+    }
+
+    fun requestCameraPermission() {
+        requestPermissionLauncher.launch(
+            android.Manifest.permission.CAMERA
+        )
+    }
+
+    /**
+     * RequestMultiplePermissions - 여러 권한 한번에
+     */
+    private val requestMultiplePermissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions: Map<String, Boolean> ->
+        // Map<권한명, 허용여부>
+
+        val cameraGranted = permissions[android.Manifest.permission.CAMERA] ?: false
+        val storageGranted = permissions[android.Manifest.permission.READ_EXTERNAL_STORAGE] ?: false
+
+        if (cameraGranted && storageGranted) {
+            // 모든 권한 허용됨
+        } else {
+            // 일부 권한 거부됨
+        }
+    }
+
+    fun requestMultiplePermissions() {
+        requestMultiplePermissionsLauncher.launch(
+            arrayOf(
+                android.Manifest.permission.CAMERA,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+        )
+    }
+
+    /**
+     * CreateDocument - 문서 생성 (파일 저장)
+     */
+    private val createDocumentLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            // 선택된 위치에 파일 저장
+            saveTextToUri(uri, "메모 내용")
+        }
+    }
+
+    fun saveDocument() {
+        createDocumentLauncher.launch("my_note.txt")  // 기본 파일명
+    }
+
+    /**
+     * OpenDocument - 문서 열기
+     */
+    private val openDocumentLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            // 문서 읽기
+            readTextFromUri(uri)
+        }
+    }
+
+    fun openDocument() {
+        openDocumentLauncher.launch(arrayOf("text/plain"))
+    }
+
+    // ========================================
+    // 패턴 4: 커스텀 계약(Contract) 만들기
+    // ========================================
+
+    /**
+     * 자주 사용하는 패턴을 커스텀 계약으로
+     */
+    class AddNoteContract : ActivityResultContracts.StartActivityForResult() {
+        // 입력/출력 타입 명시 가능
+        // 재사용성 높음
+    }
+
+    // 사용
+    private val customLauncher = registerForActivityResult(
+        AddNoteContract()
+    ) { result ->
+        // 결과 처리
+    }
+
+    // ========================================
+    // 패턴 5: 조건부 런처 (고급)
+    // ========================================
+
+    /**
+     * 상황에 따라 다른 처리
+     */
+    private var currentMode = Mode.ADD
+
+    enum class Mode {
+        ADD, EDIT, VIEW
+    }
+
+    private val dynamicLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            when (currentMode) {
+                Mode.ADD -> handleAdd(result.data)
+                Mode.EDIT -> handleEdit(result.data)
+                Mode.VIEW -> handleView(result.data)
+            }
+        }
+    }
+
+    fun launchWithMode(mode: Mode) {
+        currentMode = mode
+        val intent = Intent(this, NoteActivity::class.java)
+        intent.putExtra("mode", mode.name)
+        dynamicLauncher.launch(intent)
+    }
+
+    private fun handleView(data: Intent?) { /* ... */ }
+
+    // ========================================
+    // 패턴 6: lazy 초기화
+    // ========================================
+
+    /**
+     * 필요할 때만 생성 (메모리 절약)
+     * 주의: onCreate() 전에 접근하면 안됨
+     */
+    private val lazyLauncher by lazy {
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            // 처리
+        }
+    }
+
+    // ========================================
+    // 도우미 함수들
+    // ========================================
+
+    private fun createImageUri(): Uri {
+        // 실제 구현 필요
+        return Uri.parse("content://...")
+    }
+
+    private fun loadImage(uri: Uri) {
+        // 이미지 로드 로직
+    }
+
+    private fun accessCamera() {
+        // 카메라 접근
+    }
+
+    private fun showPermissionDeniedMessage() {
+        // 권한 거부 메시지
+    }
+
+    private fun saveTextToUri(uri: Uri, text: String) {
+        contentResolver.openOutputStream(uri)?.use { output ->
+            output.write(text.toByteArray())
+        }
+    }
+
+    private fun readTextFromUri(uri: Uri): String {
+        return contentResolver.openInputStream(uri)?.use { input ->
+            input.bufferedReader().readText()
+        } ?: ""
+    }
+
+    private lateinit var imageView: android.widget.ImageView
+}
+
+// ========================================
+// 핵심 정리
+// ========================================
+
+/*
+✅ Activity Result API 핵심:
+
+1. registerForActivityResult() - onCreate() 전에 호출
+2. 계약(Contract) 선택
+3. launcher.launch() - 실행
+
+🎯 내장 계약 종류:
+
+- StartActivityForResult: 기본 (모든 Activity)
+- GetContent: 파일 1개 선택
+- GetMultipleContents: 파일 여러 개 선택
+- TakePicture: 카메라 촬영 (전체 사진)
+- TakePicturePreview: 카메라 촬영 (썸네일)
+- RequestPermission: 권한 1개 요청
+- RequestMultiplePermissions: 권한 여러 개 요청
+- CreateDocument: 파일 저장
+- OpenDocument: 파일 열기
+- PickContact: 연락처 선택
+
+💡 베스트 프랙티스:
+
+1. 클래스 필드로 선언 (동적 생성 X)
+2. 용도별로 런처 분리
+3. 내장 계약 활용 (타입 안전)
+4. lazy 초기화로 최적화
+5. 명확한 네이밍
+
+❌ 하지 말 것:
+
+- 함수 안에서 registerForActivityResult() 호출
+- onActivityResult() 오버라이드 (Deprecated)
+- startActivityForResult() 사용 (Deprecated)
+*/
+
+// ========================================
+// 마이그레이션 가이드
+// ========================================
+
+/*
+구식 → 신식
+
+❌ 구식:
+class MainActivity : AppCompatActivity() {
+    companion object {
+        const val REQUEST_CODE = 1
+    }
+
+    fun openActivity() {
+        val intent = Intent(this, OtherActivity::class.java)
+        startActivityForResult(intent, REQUEST_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
+            // 처리
+        }
+    }
+}
+
+✅ 신식:
+class MainActivity : AppCompatActivity() {
+    private val launcher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            // 처리
+        }
+    }
+
+    fun openActivity() {
+        val intent = Intent(this, OtherActivity::class.java)
+        launcher.launch(intent)
+    }
+}
+*/

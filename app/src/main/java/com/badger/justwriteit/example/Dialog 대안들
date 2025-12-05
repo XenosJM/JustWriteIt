@@ -1,0 +1,469 @@
+package com.example.datastoragedemo
+
+import android.os.Bundle
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.fragment.app.DialogFragment
+import android.app.Dialog
+import android.content.DialogInterface
+import com.google.android.material.snackbar.Snackbar
+import androidx.compose.material3.AlertDialog as ComposeAlertDialog
+
+/**
+ * Dialog 완전 가이드 - AlertDialog vs 최신 대안들
+ */
+
+// ========================================
+// 1. AlertDialog (여전히 사용 가능!)
+// ========================================
+
+/**
+ * AlertDialog는 Deprecated 아님!
+ * 단, MaterialAlertDialogBuilder가 더 권장됨
+ */
+class TraditionalAlertDialog : AppCompatActivity() {
+
+    fun showAlertDialog() {
+        // ✅ 여전히 사용 가능 (Deprecated 아님)
+        AlertDialog.Builder(this)
+            .setTitle("전통적인 AlertDialog")
+            .setMessage("이것은 여전히 작동합니다")
+            .setPositiveButton("확인", null)
+            .show()
+    }
+}
+
+// ========================================
+// 2. MaterialAlertDialogBuilder (권장!)
+// ========================================
+
+/**
+ * Material Design 3를 따르는 다이얼로그
+ * AlertDialog보다 더 현대적인 디자인
+ *
+ * build.gradle 추가 필요:
+ * implementation 'com.google.android.material:material:1.11.0'
+ */
+class MaterialDialogExamples : AppCompatActivity() {
+
+    /**
+     * 기본 Material Dialog
+     * AlertDialog와 사용법 거의 동일
+     */
+    fun showBasicMaterialDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Material Dialog")
+            .setMessage("Material Design 3 스타일의 다이얼로그입니다")
+            .setPositiveButton("확인") { _, _ ->
+                // 클릭 처리
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    /**
+     * 아이콘 포함
+     */
+    fun showDialogWithIcon() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("삭제 확인")
+            .setMessage("정말 삭제하시겠습니까?")
+            .setIcon(android.R.drawable.ic_dialog_alert)  // 아이콘 추가
+            .setPositiveButton("삭제") { _, _ ->
+                // 삭제 로직
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    /**
+     * 배경 커스텀 (Material 테마)
+     */
+    fun showThemedDialog() {
+        MaterialAlertDialogBuilder(this)
+            // Material 컴포넌트 테마 적용
+            .setTitle("테마 적용 Dialog")
+            .setMessage("Material You 디자인이 적용됩니다")
+            .setPositiveButton("확인", null)
+            .setBackground(getDrawable(android.R.drawable.dialog_holo_light_frame))
+            .show()
+    }
+
+    /**
+     * 단일 선택 리스트
+     */
+    fun showSingleChoiceDialog() {
+        val items = arrayOf("작게", "보통", "크게")
+        var selectedIndex = 1
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("글자 크기")
+            .setSingleChoiceItems(items, selectedIndex) { _, which ->
+                selectedIndex = which
+            }
+            .setPositiveButton("확인") { _, _ ->
+                Toast.makeText(this, "${items[selectedIndex]} 선택됨", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    /**
+     * 다중 선택 리스트
+     */
+    fun showMultiChoiceDialog() {
+        val items = arrayOf("알림", "진동", "소리")
+        val checkedItems = booleanArrayOf(true, false, true)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("알림 설정")
+            .setMultiChoiceItems(items, checkedItems) { _, which, isChecked ->
+                checkedItems[which] = isChecked
+            }
+            .setPositiveButton("확인") { _, _ ->
+                val selected = items.filterIndexed { index, _ -> checkedItems[index] }
+                Toast.makeText(this, "선택: ${selected.joinToString()}", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+}
+
+// ========================================
+// 3. DialogFragment (복잡한 Dialog에 권장)
+// ========================================
+
+/**
+ * DialogFragment를 사용하는 이유:
+ * 1. 생명주기 자동 관리
+ * 2. 화면 회전시 자동 복원
+ * 3. 복잡한 레이아웃 가능
+ * 4. Fragment Manager로 관리
+ */
+class ConfirmDialogFragment : DialogFragment() {
+
+    // 콜백 인터페이스
+    interface ConfirmListener {
+        fun onConfirm()
+        fun onCancel()
+    }
+
+    private var listener: ConfirmListener? = null
+
+    fun setListener(listener: ConfirmListener) {
+        this.listener = listener
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val title = arguments?.getString("title") ?: "확인"
+        val message = arguments?.getString("message") ?: ""
+
+        return MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("확인") { _, _ ->
+                listener?.onConfirm()
+            }
+            .setNegativeButton("취소") { _, _ ->
+                listener?.onCancel()
+            }
+            .create()
+    }
+
+    companion object {
+        fun newInstance(title: String, message: String): ConfirmDialogFragment {
+            return ConfirmDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putString("title", title)
+                    putString("message", message)
+                }
+            }
+        }
+    }
+}
+
+// DialogFragment 사용 예제
+class UseDialogFragment : AppCompatActivity() {
+
+    fun showDialogFragment() {
+        val dialog = ConfirmDialogFragment.newInstance(
+            title = "메모 삭제",
+            message = "정말 삭제하시겠습니까?"
+        )
+
+        dialog.setListener(object : ConfirmDialogFragment.ConfirmListener {
+            override fun onConfirm() {
+                Toast.makeText(this@UseDialogFragment, "삭제됨", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onCancel() {
+                Toast.makeText(this@UseDialogFragment, "취소됨", Toast.LENGTH_SHORT).show()
+            }
+        })
+
+        dialog.show(supportFragmentManager, "ConfirmDialog")
+    }
+}
+
+// ========================================
+// 4. BottomSheetDialog (모던한 대안)
+// ========================================
+
+/**
+ * 하단에서 올라오는 다이얼로그
+ * Material Design에서 권장하는 패턴
+ */
+class BottomSheetExamples : AppCompatActivity() {
+
+    fun showBottomSheet() {
+        val bottomSheet = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+
+        // 커스텀 레이아웃 inflate
+        val view = layoutInflater.inflate(R.layout.bottom_sheet_dialog, null)
+
+        // 뷰 설정
+        // val button = view.findViewById<Button>(R.id.button)
+        // button.setOnClickListener { ... }
+
+        bottomSheet.setContentView(view)
+        bottomSheet.show()
+    }
+}
+
+/**
+ * BottomSheetDialogFragment (더 권장)
+ */
+class OptionsBottomSheet : com.google.android.material.bottomsheet.BottomSheetDialogFragment() {
+
+    override fun onCreateView(
+        inflater: android.view.LayoutInflater,
+        container: android.view.ViewGroup?,
+        savedInstanceState: Bundle?
+    ): android.view.View? {
+        return inflater.inflate(R.layout.bottom_sheet_options, container, false)
+    }
+
+    override fun onViewCreated(view: android.view.View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // 뷰 설정
+        // view.findViewById<Button>(R.id.btnEdit).setOnClickListener { ... }
+        // view.findViewById<Button>(R.id.btnDelete).setOnClickListener { ... }
+    }
+}
+
+// 사용
+class UseBottomSheet : AppCompatActivity() {
+    fun showOptions() {
+        OptionsBottomSheet().show(supportFragmentManager, "Options")
+    }
+}
+
+// ========================================
+// 5. Snackbar (간단한 알림)
+// ========================================
+
+/**
+ * Toast의 현대적 대안
+ * 액션 버튼 포함 가능
+ */
+class SnackbarExamples : AppCompatActivity() {
+
+    fun showSnackbar() {
+        val view = findViewById<android.view.View>(android.R.id.content)
+
+        Snackbar.make(view, "메모가 삭제되었습니다", Snackbar.LENGTH_LONG)
+            .setAction("실행 취소") {
+                // 실행 취소 로직
+                Toast.makeText(this, "삭제 취소됨", Toast.LENGTH_SHORT).show()
+            }
+            .show()
+    }
+
+    fun showSnackbarWithCallback() {
+        val view = findViewById<android.view.View>(android.R.id.content)
+
+        Snackbar.make(view, "인터넷 연결 없음", Snackbar.LENGTH_INDEFINITE)
+            .setAction("재시도") {
+                // 재시도 로직
+            }
+            .addCallback(object : Snackbar.Callback() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    // Snackbar 닫힘
+                }
+
+                override fun onShown(sb: Snackbar?) {
+                    // Snackbar 표시됨
+                }
+            })
+            .show()
+    }
+}
+
+// ========================================
+// 6. Compose AlertDialog (Jetpack Compose용)
+// ========================================
+
+/**
+ * Compose를 사용한다면 이게 가장 현대적
+ *
+ * build.gradle 추가:
+ * implementation "androidx.compose.material3:material3:1.2.0"
+ */
+/*
+@Composable
+fun ComposeAlertDialogExample() {
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        ComposeAlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("메모 삭제") },
+            text = { Text("정말 삭제하시겠습니까?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    // 삭제 로직
+                    showDialog = false
+                }) {
+                    Text("삭제")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
+
+    Button(onClick = { showDialog = true }) {
+        Text("다이얼로그 표시")
+    }
+}
+*/
+
+// ========================================
+// 비교 및 선택 가이드
+// ========================================
+
+/*
+📊 각 방식의 장단점:
+
+1. AlertDialog (전통적)
+   ✅ 간단하고 빠름
+   ✅ 추가 의존성 불필요
+   ⚠️ 디자인이 약간 구식
+
+2. MaterialAlertDialogBuilder (권장!)
+   ✅ Material Design 3
+   ✅ AlertDialog와 사용법 동일
+   ✅ 현대적인 디자인
+   ✅ 대부분의 경우 최선의 선택
+
+3. DialogFragment (복잡한 경우)
+   ✅ 생명주기 자동 관리
+   ✅ 화면 회전 대응
+   ✅ 복잡한 레이아웃
+   ⚠️ 코드가 길어짐
+
+4. BottomSheetDialog (모던)
+   ✅ Material Design 권장 패턴
+   ✅ 사용자 친화적
+   ✅ 손가락으로 닫기 가능
+   ⚠️ 공간 많이 차지
+
+5. Snackbar (간단한 알림)
+   ✅ 방해 최소화
+   ✅ 액션 버튼 가능
+   ✅ 자동으로 사라짐
+   ⚠️ 긴 메시지 부적합
+
+6. Compose AlertDialog (Compose 앱)
+   ✅ 선언적 UI
+   ✅ 상태 관리 쉬움
+   ✅ 가장 현대적
+   ⚠️ Compose 필요
+
+
+🎯 선택 가이드:
+
+간단한 확인/경고 → MaterialAlertDialogBuilder
+복잡한 다이얼로그 → DialogFragment
+옵션 선택 → BottomSheetDialogFragment
+간단한 피드백 → Snackbar
+Compose 앱 → Compose AlertDialog
+*/
+
+// ========================================
+// 실전 추천 코드
+// ========================================
+
+/**
+ * 프로젝트에서 사용할 유틸리티 클래스
+ */
+object DialogUtils {
+
+    /**
+     * 간단한 확인 다이얼로그
+     */
+    fun showConfirmDialog(
+        context: android.content.Context,
+        title: String,
+        message: String,
+        onConfirm: () -> Unit
+    ) {
+        MaterialAlertDialogBuilder(context)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("확인") { _, _ -> onConfirm() }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    /**
+     * 정보 다이얼로그
+     */
+    fun showInfoDialog(
+        context: android.content.Context,
+        title: String,
+        message: String
+    ) {
+        MaterialAlertDialogBuilder(context)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("확인", null)
+            .show()
+    }
+
+    /**
+     * 삭제 확인 다이얼로그
+     */
+    fun showDeleteDialog(
+        context: android.content.Context,
+        itemName: String,
+        onDelete: () -> Unit
+    ) {
+        MaterialAlertDialogBuilder(context)
+            .setTitle("삭제 확인")
+            .setMessage("'$itemName'을(를) 삭제하시겠습니까?")
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton("삭제") { _, _ -> onDelete() }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+}
+
+// 사용 예제
+class ExampleUsage : AppCompatActivity() {
+    fun example() {
+        DialogUtils.showDeleteDialog(
+            context = this,
+            itemName = "회의록"
+        ) {
+            // 삭제 로직
+            Toast.makeText(this, "삭제됨", Toast.LENGTH_SHORT).show()
+        }
+    }
+}

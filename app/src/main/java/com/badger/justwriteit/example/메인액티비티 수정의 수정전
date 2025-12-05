@@ -1,0 +1,342 @@
+
+package com.badger.datastoragedemo
+
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.material3.AlertDialog
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.badger.datastoragedemo.data.Note
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+
+/**
+ * MainActivity - 메모 목록 화면
+ *
+ * 주요 기능:
+ * 1. 메모 목록 표시 (RecyclerView)
+ * 2. 메모 추가/수정/삭제
+ * 3. 검색 기능
+ * 4. 스와이프로 삭제
+ */
+class MainActivity : AppCompatActivity() {
+
+    // 나중에 초기화할 변수들(lateinit)
+    private lateinit var viewModel: NoteViewModel
+    private lateinit var adapter: NoteAdapter
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var fabAddNote: FloatingActionButton
+    private lateinit var editTextSearch: EditText
+    private lateinit var btnClearSearch: Button
+    private lateinit var textViewEmpty: TextView
+
+    // Request code for activity result
+    companion object {
+        private const val REQUEST_ADD_NOTE = 1
+        private const val REQUEST_EDIT_NOTE = 2
+    }
+
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        // Toolbar 설정
+        setSupportActionBar(findViewById(R.id.toolbar))
+
+        // View 초기화
+        initViews()
+
+        // ViewModel 초기화
+        // ViewModelProvider가 ViewModel 생명주기를 관리함
+        viewModel = ViewModelProvider(this)[NoteViewModel::class.java]
+
+        // RecyclerView 설정
+        setupRecyclerView()
+
+        // LiveData 관찰 시작
+        observeData()
+
+        // 버튼 리스너 설정
+        setupListeners()
+
+        // 스와이프로 삭제 기능
+        setupSwipeToDelete()
+    }
+
+    private fun initViews() {
+        recyclerView = findViewById(R.id.recyclerViewNotes)
+        fabAddNote = findViewById(R.id.fabAddNote)
+        editTextSearch = findViewById(R.id.editTextSearch)
+        btnClearSearch = findViewById(R.id.btnClearSearch)
+        textViewEmpty = findViewById(R.id.textViewEmpty)
+    }
+
+    // RecyclerView 설정
+    private fun setupRecyclerView() {
+        // Adapter 생성
+        adapter = NoteAdapter(
+            onNoteClick = { note ->
+                // 메모 클릭 -> 수정 화면으로
+                val intent = Intent(this, AddEditNoteActivity::class.java)
+                intent.putExtra("NOTE_ID", note.id)
+                intent.putExtra("NOTE_TITLE", note.title)
+                intent.putExtra("NOTE_CONTENT", note.content)
+                intent.putExtra("NOTE_IMPORTANT", note.isImportant)
+                // TODO Deprecated 된 코드 변경할것1
+                startActivityForResult(intent, REQUEST_EDIT_NOTE)
+            },
+            onNoteLongClick = { note ->
+                // 롱클릭 -> 삭제 확인 다이얼로그
+                showDeleteConfirmDialog(note)
+            }
+        )
+
+        // RecyclerView 설정
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        // 아이템 간격 추가 (선택사항)
+        // recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+    }
+
+    // LiveData 관찰
+    // 데이터 변경시 자동으로 UI 업데이트
+    private fun observeData() {
+        // 모든 메모 관찰
+        viewModel.allNotes.observe(this) { notes ->
+            // 리스트가 변경될 때마다 호출됨
+            adapter.submitList(notes)
+
+            // 메모 없을 때 안내 메시지 표시
+            if (notes.isEmpty()) {
+                textViewEmpty.visibility = View.VISIBLE
+                recyclerView.visibility = View.GONE
+            } else {
+                textViewEmpty.visibility = View.GONE
+                recyclerView.visibility = View.VISIBLE
+            }
+        }
+
+        // 메모 개수 관찰 (선택사항)
+        viewModel.noteCount.observe(this) { count ->
+            // Toolbar 제목 업데이트
+            supportActionBar?.title = "내 메모장($count)"
+        }
+    }
+
+    // 버튼 리스너 설정
+    private fun setupListeners() {
+        // FAB 클릭 - 새 메모 추가
+        fabAddNote.setOnClickListener {
+            val intent = Intent(this, AddEditNoteActivity::class.java)
+            // TODO Deprecated 된 코드 변경할것2
+            startActivityForResult(intent, REQUEST_ADD_NOTE)
+        }
+
+        // 검색창 텍스트 변경 리스너
+        editTextSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // 실시간 검색
+                val query = s.toString()
+                if (query.isEmpty()) {
+                    // 검색어 없으면 전체 표시
+                    viewModel.allNotes.observe(this@MainActivity) { notes ->
+                        adapter.submitList(notes)
+                    }
+                } else {
+                    // 검색 실행
+                    viewModel.searchNotes(query).observe(this@MainActivity) { notes ->
+                        adapter.submitList(notes)
+                    }
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        // 검색 초기화 버튼
+        btnClearSearch.setOnClickListener {
+            editTextSearch.text.clear()
+            viewModel.allNotes.observe(this) { notes ->
+                adapter.submitList(notes)
+            }
+        }
+    }
+
+    // 스와이프로 삭제 기능
+    private fun setupSwipeToDelete() {
+        val itemTouchHelper = ItemTouchHelper(
+            object  : ItemTouchHelper.SimpleCallback(
+                0, // 드래그 방향 (0 = 드래그 비활성화)
+                ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT // 스와이프 방향
+            ) {
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder
+                ): Boolean = false
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                    // 스와이프된 위치의 메모 가져오기
+                    val position = viewHolder.adapterPosition
+                    val note = adapter.getNoteAt(position)
+
+                    // 메모 삭제
+                    viewModel.delete(note)
+
+                    // Toast 메시지
+                    Toast.makeText(
+                        this@MainActivity,
+                        "${note.title} 삭제됨",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        )
+
+        // RecyclerView에 ItemTouchHelper 연결
+        itemTouchHelper.attachToRecyclerView(recyclerView)
+    }
+
+    // 삭제 확인 다이얼로그
+    private fun showDeleteConfirmDialog(note: Note) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("메모 삭제")
+            .setMessage("'${note.title}'를 삭제하시겠습니까?")
+            .setPositiveButton("삭제") { _, _ ->
+                // 클릭 처리
+                viewModel.delete(note)
+                Toast.makeText(this, "삭제되었습니다", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    // 옵션 메뉴 생성
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    // 옵션 메뉴 클릭
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_delete_all -> {
+                showDeleteAllConfirmDialog()
+                true
+            }
+            R.id.action_sample_data -> {
+                viewModel.insertSampleData()
+                Toast.makeText(this, "샘플 데이터 추가완료", Toast.LENGTH_SHORT).show()
+                true
+            }
+            R.id.action_important -> {
+                viewModel.getImportantNotes().observe(this) { notes ->
+                    adapter.submitList(notes)
+                }
+                Toast.makeText(this, "중요 메모만 표시", Toast.LENGTH_SHORT).show()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    // 전체 삭제 확인 다이얼로그
+    private fun showDeleteAllConfirmDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("모든 메모 삭제")
+            .setMessage("정말로 모든 메모를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")
+            .setPositiveButton("삭제") { _, _ ->
+                viewModel.deleteAll()
+                Toast.makeText(this, "모든 메모가 삭제되었습니다", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    // Activity Result 처리 (메모 추가/수정 후)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode == RESULT_OK && data != null) {
+            val title = data.getStringExtra("TITLE") ?: ""
+            val content = data.getStringExtra("CONTENT") ?: ""
+            val isImportant = data.getBooleanExtra("IMPORTANT", false)
+
+            when (requestCode) {
+                REQUEST_ADD_NOTE -> {
+                    // 새 메모 추가
+                    val note = Note (
+                        title = title,
+                        content = content,
+                        isImportant = isImportant
+                    )
+                    viewModel.insert(note)
+                    Toast.makeText(this, "메모 저장 완료", Toast.LENGTH_SHORT).show()
+                }
+                REQUEST_EDIT_NOTE -> {
+                    // 기존 메모 수정
+                    val noteId = data.getIntExtra("NOTE_ID", -1)
+                    if (noteId != -1) {
+                        val note = Note(
+                            id = noteId,
+                            title = title,
+                            content = content,
+                            isImportant = isImportant,
+                            createdAt = data.getLongExtra("CREATED_AT", System.currentTimeMillis()),
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        viewModel.updae(note)
+                        Toast.makeText(this, "메모 수정 완료", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 핵심 개념 정리:
+//
+// 1. ViewModel + LiveData
+//    - 데이터 변경시 자동 UI 업데이트
+//    - observe() 한번만 설정하면 끝
+//
+// 2. RecyclerView + ListAdapter
+//    - submitList()만 호출하면 자동 갱신
+//    - DiffUtil이 변경사항 계산
+//
+// 3. 코루틴 (viewModelScope)
+//    - DB 작업을 백그라운드에서 자동 실행
+//    - UI 스레드 블록 없음
+//
+// 4. ItemTouchHelper
+//    - 스와이프로 삭제 기능
+//    - 드래그앤드롭도 가능
+
+
+
+
+
+
+
+
+

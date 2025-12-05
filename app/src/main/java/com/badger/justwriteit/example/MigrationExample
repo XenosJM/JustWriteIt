@@ -1,0 +1,335 @@
+
+
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+
+/**
+ * 데이터베이스 마이그레이션 완전 가이드
+ * 
+ * 마이그레이션 = 데이터베이스 버전 업그레이드 전략
+ * 사용자 데이터를 보존하면서 스키마를 변경하는 방법
+ */
+
+// ========================================
+// 예제 1: 새 컬럼 추가 (버전 1 -> 2)
+// ========================================
+
+/**
+ * 시나리오: 메모에 "카테고리" 기능을 추가하고 싶음
+ * 
+ * 변경 전 (Version 1):
+ * CREATE TABLE notes (
+ *     id INTEGER PRIMARY KEY,
+ *     title TEXT,
+ *     content TEXT,
+ *     created_at INTEGER
+ * )
+ * 
+ * 변경 후 (Version 2):
+ * CREATE TABLE notes (
+ *     id INTEGER PRIMARY KEY,
+ *     title TEXT,
+ *     content TEXT,
+ *     created_at INTEGER,
+ *     category TEXT  ← 새로 추가!
+ * )
+ */
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // SQL 명령어로 테이블 구조 변경
+        database.execSQL(
+            """
+            ALTER TABLE notes 
+            ADD COLUMN category TEXT DEFAULT 'general' NOT NULL
+            """.trimIndent()
+        )
+        
+        // 설명:
+        // - ALTER TABLE: 테이블 구조 변경
+        // - ADD COLUMN: 새 컬럼 추가
+        // - DEFAULT 'general': 기존 데이터의 기본값 (중요!)
+        // - NOT NULL: null 불가 (기본값 있으므로 안전)
+    }
+}
+
+// ========================================
+// 예제 2: 컬럼 이름 변경 (버전 2 -> 3)
+// ========================================
+
+/**
+ * 시나리오: "created_at"을 "createdDate"로 변경
+ * 
+ * SQLite는 컬럼 이름 변경을 직접 지원하지 않음!
+ * 우회 방법: 새 테이블 생성 → 데이터 복사 → 기존 테이블 삭제
+ */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // 1단계: 새 테이블 생성
+        database.execSQL(
+            """
+            CREATE TABLE notes_new (
+                id INTEGER PRIMARY KEY NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                createdDate INTEGER NOT NULL,
+                category TEXT NOT NULL DEFAULT 'general'
+            )
+            """.trimIndent()
+        )
+        
+        // 2단계: 기존 데이터 복사
+        database.execSQL(
+            """
+            INSERT INTO notes_new (id, title, content, createdDate, category)
+            SELECT id, title, content, created_at, category
+            FROM notes
+            """.trimIndent()
+        )
+        
+        // 3단계: 기존 테이블 삭제
+        database.execSQL("DROP TABLE notes")
+        
+        // 4단계: 새 테이블 이름 변경
+        database.execSQL("ALTER TABLE notes_new RENAME TO notes")
+    }
+}
+
+// ========================================
+// 예제 3: 새 테이블 추가 (버전 3 -> 4)
+// ========================================
+
+/**
+ * 시나리오: "태그" 기능 추가 - 새로운 tags 테이블 생성
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // 새 테이블 생성
+        database.execSQL(
+            """
+            CREATE TABLE tags (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                name TEXT NOT NULL UNIQUE,
+                color TEXT NOT NULL
+            )
+            """.trimIndent()
+        )
+        
+        // 메모-태그 관계 테이블 (다대다 관계)
+        database.execSQL(
+            """
+            CREATE TABLE note_tag_cross_ref (
+                noteId INTEGER NOT NULL,
+                tagId INTEGER NOT NULL,
+                PRIMARY KEY(noteId, tagId),
+                FOREIGN KEY(noteId) REFERENCES notes(id) ON DELETE CASCADE,
+                FOREIGN KEY(tagId) REFERENCES tags(id) ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+        
+        // 인덱스 추가 (검색 성능 향상)
+        database.execSQL(
+            "CREATE INDEX index_note_tag_cross_ref_noteId ON note_tag_cross_ref(noteId)"
+        )
+        database.execSQL(
+            "CREATE INDEX index_note_tag_cross_ref_tagId ON note_tag_cross_ref(tagId)"
+        )
+    }
+}
+
+// ========================================
+// 예제 4: 컬럼 삭제 (버전 4 -> 5)
+// ========================================
+
+/**
+ * 시나리오: "category" 컬럼 삭제 (tags로 대체)
+ * SQLite는 DROP COLUMN을 지원하지 않음 (Android 11+ 제외)
+ */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // 방법 1: 새 테이블 생성 방식 (안전, 권장)
+        database.execSQL(
+            """
+            CREATE TABLE notes_new (
+                id INTEGER PRIMARY KEY NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                createdDate INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+        
+        database.execSQL(
+            """
+            INSERT INTO notes_new (id, title, content, createdDate, updated_at)
+            SELECT id, title, content, createdDate, updated_at
+            FROM notes
+            """.trimIndent()
+        )
+        
+        database.execSQL("DROP TABLE notes")
+        database.execSQL("ALTER TABLE notes_new RENAME TO notes")
+        
+        // 방법 2: Android 11+ (API 30+)에서는 직접 삭제 가능
+        // database.execSQL("ALTER TABLE notes DROP COLUMN category")
+    }
+}
+
+// ========================================
+// Database 클래스에 마이그레이션 적용
+// ========================================
+
+/**
+ * 실제 사용 예시
+ */
+/*
+@Database(entities = [Note::class], version = 5)  // 버전 5로 업데이트
+abstract class NoteDatabase : RoomDatabase() {
+    
+    abstract fun noteDao(): NoteDao
+    
+    companion object {
+        @Volatile
+        private var INSTANCE: NoteDatabase? = null
+        
+        fun getDatabase(context: Context): NoteDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    NoteDatabase::class.java,
+                    "note_database"
+                )
+                    // 모든 마이그레이션 추가
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3,
+                        MIGRATION_3_4,
+                        MIGRATION_4_5
+                    )
+                    .build()
+                
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
+}
+*/
+
+// ========================================
+// 마이그레이션 전략
+// ========================================
+
+/**
+ * 1. 개발 단계 (테스트 중)
+ *    - .fallbackToDestructiveMigration() 사용
+ *    - 버전 변경시 DB 삭제하고 재생성
+ *    - 데이터 손실 OK (테스트 데이터니까)
+ */
+fun developmentStrategy(context: Context): NoteDatabase {
+    return Room.databaseBuilder(context, NoteDatabase::class.java, "note_database")
+        .fallbackToDestructiveMigration()  // 마이그레이션 실패시 DB 재생성
+        .build()
+}
+
+/**
+ * 2. 프로덕션 단계 (실제 사용자)
+ *    - 모든 마이그레이션 명시적으로 정의
+ *    - 데이터 손실 절대 안됨!
+ */
+fun productionStrategy(context: Context): NoteDatabase {
+    return Room.databaseBuilder(context, NoteDatabase::class.java, "note_database")
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+        .build()
+}
+
+/**
+ * 3. 하이브리드 전략 (권장)
+ *    - 주요 버전은 마이그레이션
+ *    - 오래된 버전은 재설치 유도
+ */
+fun hybridStrategy(context: Context): NoteDatabase {
+    return Room.databaseBuilder(context, NoteDatabase::class.java, "note_database")
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+        // 버전 1에서 바로 버전 3으로 업데이트 허용
+        .fallbackToDestructiveMigrationFrom(1)  // 버전 1에서는 재생성
+        .build()
+}
+
+// ========================================
+// 마이그레이션 테스트
+// ========================================
+
+/**
+ * 마이그레이션이 제대로 작동하는지 테스트하는 방법
+ * 
+ * build.gradle에 추가:
+ * androidTestImplementation "androidx.room:room-testing:$room_version"
+ */
+/*
+@RunWith(AndroidJUnit4::class)
+class MigrationTest {
+    private val TEST_DB = "migration_test"
+    
+    @Rule
+    @JvmField
+    val helper: MigrationTestHelper = MigrationTestHelper(
+        InstrumentationRegistry.getInstrumentation(),
+        NoteDatabase::class.java
+    )
+    
+    @Test
+    fun migrate1To2() {
+        // 버전 1 DB 생성
+        val db = helper.createDatabase(TEST_DB, 1)
+        
+        // 버전 1 데이터 삽입
+        db.execSQL("INSERT INTO notes (id, title, content, created_at) VALUES (1, 'Test', 'Content', 123456)")
+        db.close()
+        
+        // 버전 2로 마이그레이션
+        val db2 = helper.runMigrationsAndValidate(TEST_DB, 2, true, MIGRATION_1_2)
+        
+        // 데이터 검증
+        val cursor = db2.query("SELECT * FROM notes WHERE id = 1")
+        assertTrue(cursor.moveToFirst())
+        assertEquals("general", cursor.getString(cursor.getColumnIndex("category")))
+    }
+}
+*/
+
+// ========================================
+// 핵심 정리
+// ========================================
+
+/*
+✅ 마이그레이션 체크리스트:
+
+1. Entity 클래스 수정
+   - 새 필드 추가/제거
+   - @Database의 version 증가
+
+2. Migration 객체 생성
+   - 이전 버전 → 새 버전 SQL 작성
+   - ALTER TABLE, CREATE TABLE 등 사용
+
+3. Database 빌더에 추가
+   - .addMigrations() 호출
+
+4. 테스트
+   - 기존 데이터 보존 확인
+   - 새 기능 동작 확인
+
+❌ 흔한 실수:
+- version 번호 증가 안함
+- 마이그레이션 추가 안함 → 앱 크래시!
+- DEFAULT 값 없이 NOT NULL 컬럼 추가
+- 데이터 타입 불일치
+
+💡 개발 팁:
+- 개발 중에는 fallbackToDestructiveMigration() 사용
+- 출시 후에는 반드시 마이그레이션 작성
+- 복잡한 마이그레이션은 여러 단계로 나누기
+- 항상 백업 기능 제공
+*/

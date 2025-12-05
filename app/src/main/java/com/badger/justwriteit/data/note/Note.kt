@@ -1,4 +1,4 @@
-package com.badger.justwriteit.data
+package com.badger.justwriteit.data.note
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

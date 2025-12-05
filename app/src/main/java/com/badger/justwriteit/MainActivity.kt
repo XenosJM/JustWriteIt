@@ -22,7 +22,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.badger.justwriteit.data.Note
+import com.badger.justwriteit.data.note.Note
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
@@ -230,6 +230,7 @@ class MainActivity : AppCompatActivity() {
 
         // 검색창 텍스트 변경 리스너
         editTextSearch.addTextChangedListener(object : TextWatcher {
+            // TODO 제목으로 찾기와 제목과 내용으로 찾기 기능을 사용하기 위한 체크포인트를 만들어볼것
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {

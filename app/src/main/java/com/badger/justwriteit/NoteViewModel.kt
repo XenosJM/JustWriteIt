@@ -4,9 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import com.badger.justwriteit.data.Note
+import com.badger.justwriteit.data.note.Note
 import com.badger.justwriteit.data.NoteDatabase
-import com.badger.justwriteit.data.NoteRepository
+import com.badger.justwriteit.data.note.NoteRepository
 import kotlinx.coroutines.launch
 
 /**

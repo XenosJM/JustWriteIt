@@ -17,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -136,14 +137,15 @@ class MainActivity : AppCompatActivity() {
 
     // Build 버전에 따른UI 변경 함수
     private fun changeUI() {
-        val root = findViewById<View>(R.id.lootLayout)
+        val root = findViewById<View>(R.id.toolbar)
         val fabBtn = findViewById<View>(R.id.fabAddNote)
 
         // 상태표시줄 만큼 툴바를 내려주는 코드
         ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
-            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-            val navigationBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            view.setPadding(0, statusBar, 0, navigationBar)
+            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = root.paddingBottom + statusBar.top
+            }
             insets
         }
 
@@ -151,7 +153,7 @@ class MainActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(fabBtn) { view, insets ->
             val navigationBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                bottomMargin = navigationBar + 32 // 32dp, 여유 padding
+                bottomMargin = navigationBar + fabBtn.paddingBottom + 20 // 20dp, 여유 padding
             }
             insets
         }

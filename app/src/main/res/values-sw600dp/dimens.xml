@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 간격 크게 증가 -->
+    <dimen name="spacing_normal">20dp</dimen>
+    <dimen name="spacing_large">32dp</dimen>
+    <dimen name="spacing_xlarge">40dp</dimen>
+
+    <!-- 패딩 증가 -->
+    <dimen name="padding_standard">24dp</dimen>
+    <dimen name="padding_card">24dp</dimen>
+
+    <!-- 텍스트 크기 증가 -->
+    <dimen name="text_size_small">14sp</dimen>
+    <dimen name="text_size_normal">16sp</dimen>
+    <dimen name="text_size_medium">18sp</dimen>
+    <dimen name="text_size_large">20sp</dimen>
+    <dimen name="text_size_title">22sp</dimen>
+
+    <dimen name="edit_text_content_height">300dp</dimen>
+    <dimen name="card_corner_radius">12dp</dimen>
+</resources>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 최소한의 간격 -->
+    <dimen name="spacing_tiny">2dp</dimen>
+    <dimen name="spacing_small">4dp</dimen>
+    <dimen name="spacing_medium">8dp</dimen>
+    <dimen name="spacing_normal">10dp</dimen>
+    <dimen name="spacing_large">16dp</dimen>
+    <dimen name="spacing_xlarge">20dp</dimen>
+
+    <!-- 패딩 최소화 -->
+    <dimen name="padding_standard">10dp</dimen>
+    <dimen name="padding_card">10dp</dimen>
+    <dimen name="padding_edit_text">8dp</dimen>
+    <dimen name="padding_button">10dp</dimen>
+
+    <!-- 마진 최소화 -->
+    <dimen name="margin_card">4dp</dimen>
+    <dimen name="margin_fab">10dp</dimen>
+
+    <!-- 텍스트 크기 최소화 -->
+    <dimen name="text_size_tiny">8sp</dimen>
+    <dimen name="text_size_small">10sp</dimen>
+    <dimen name="text_size_normal">12sp</dimen>
+    <dimen name="text_size_medium">13sp</dimen>
+    <dimen name="text_size_large">15sp</dimen>
+    <dimen name="text_size_title">16sp</dimen>
+    <dimen name="text_size_headline">18sp</dimen>
+
+    <!-- 카드 -->
+    <dimen name="card_corner_radius">4dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
+
+    <!-- 특정 뷰 크기 -->
+    <dimen name="toolbar_height">48dp</dimen>
+    <dimen name="edit_text_content_height">120dp</dimen>
+    <dimen name="important_indicator_width">2dp</dimen>
+
+    <!-- 아이콘 크기 -->
+    <dimen name="icon_size_small">16dp</dimen>
+    <dimen name="icon_size_normal">18dp</dimen>
+    <dimen name="icon_size_large">24dp</dimen>
+</resources>
+
+<!--
+    ## 전체 화면 크기 계층 구조
+    ```
+    res/
+    ├── values/                    (기본 - 일반 폰, 5.5~6.5인치)
+    │   └── dimens.xml
+    ├── values-small/              (아주 작은 화면 - 4인치 이하)
+    │   └── dimens.xml
+    ├── values-sw320dp/            (작은 폰 - 4~5인치)
+    │   └── dimens.xml
+    ├── values-sw360dp/            (중간 폰 - 5.5~6인치)
+    │   └── dimens.xml
+    ├── values-sw600dp/            (7인치 태블릿)
+    │   └── dimens.xml
+    └── values-sw720dp/            (10인치+ 태블릿)
+    └── dimens.xml
+    ```
+
+    ## 화면 크기별 적용 우선순위
+
+    안드로이드는 다음 순서로 리소스를 선택합니다:
+    ```
+    1. 가장 구체적인 한정자 먼저
+    2. sw (smallest width) > w (width) > small/normal/large
+    3. 조건에 맞는 가장 큰 값 선택
+    ```
+
+    ### 예시:
+    - **320dp 화면**: `values-sw320dp` 사용
+    - **360dp 화면**: `values-sw360dp` 사용
+    - **400dp 화면**: `values-sw360dp` 사용 (더 큰 sw600dp는 안맞음)
+    - **600dp 화면**: `values-sw600dp` 사용
+    - **800dp 화면**: `values-sw720dp` 사용
+
+    ## 실제 기기 예시
+    ```
+    작은 폰:
+    - Galaxy S3 Mini (320dp)
+    - iPhone SE 1세대 (320dp)
+
+    일반 작은 폰:
+    - Galaxy S5 Mini (360dp)
+    - Pixel 3a (392dp)
+
+    일반 폰 (기본):
+    - Galaxy S21 (360-411dp)
+    - Pixel 6 (411dp)
+    - iPhone 12 (390dp)
+
+    중간 폰:
+    - Galaxy S23 Ultra (384dp)
+    - Pixel 7 Pro (412dp)
+
+    태블릿:
+    - iPad Mini (600dp)
+    - Galaxy Tab A (600-720dp)
+    - iPad Pro (834dp+)-->

@@ -5,68 +5,58 @@
     android:fillViewport="true">
 
     <LinearLayout
+        style="@style/AppContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
         <!-- 제목 입력 -->
         <TextView
+            style="@style/TextAppearance.Label"
+            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="bottom|start"
-            android:text="제목"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="@dimen/spacing_small"
+            android:text="제목" />
 
         <EditText
             android:id="@+id/editTextTitle"
+            style="@style/AppEditText.Title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="메모 제목을 입력하세요"
-            android:inputType="text"
-            android:maxLines="1"
-            android:padding="12dp"
-            android:background="@android:drawable/editbox_background"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="@dimen/spacing_normal" />
 
         <!-- 내용 입력 -->
         <TextView
+            style="@style/TextAppearance.Label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="내용"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="@dimen/spacing_small"
+            android:text="내용" />
 
         <EditText
             android:id="@+id/editTextContent"
+            style="@style/AppEditText.Content"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:hint="메모 내용을 입력하세요"
-            android:inputType="textMultiLine"
-            android:gravity="top|start"
-            android:padding="12dp"
-            android:background="@android:drawable/editbox_background"
-            android:layout_marginBottom="16dp" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_normal" />
 
         <!-- 중요 체크박스 -->
         <CheckBox
             android:id="@+id/checkBoxImportant"
+            style="@style/AppCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="중요 메모로 표시"
-            android:textSize="16sp"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="@dimen/spacing_large"
+            android:text="중요 메모로 표시" />
 
         <!-- 저장 버튼 -->
         <Button
             android:id="@+id/buttonSave"
+            style="@style/AppButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="저장"
-            android:textSize="16sp"
-            android:padding="16dp" />
+            android:textColor="@color/black"
+            android:text="저장" />
     </LinearLayout>
 </ScrollView>

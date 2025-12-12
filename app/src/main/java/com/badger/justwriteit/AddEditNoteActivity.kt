@@ -1,12 +1,18 @@
 package com.badger.justwriteit
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 
 /**
  * AddEditNoteActivity - 메모 추가/수정 화면
@@ -31,6 +37,14 @@ class AddEditNoteActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_edit_note)
 
+        if (Build.VERSION.SDK_INT >= 35) {
+            // API 35 이상 전용 UI 설정
+            changeUI()
+        } else {
+            // API 34 이하 UI 설정
+        }
+
+
         // View 초기화
         editTextTitle = findViewById(R.id.editTextTitle)
         editTextContent = findViewById(R.id.editTextContent)
@@ -47,6 +61,21 @@ class AddEditNoteActivity : AppCompatActivity() {
         // 저장 버튼 클릭
         buttonSave.setOnClickListener {
             saveNote()
+        }
+    }
+
+    // Build 버전에 따른UI 변경 함수
+    private fun changeUI() {
+        //TODO 바꿔야함
+        val root = findViewById<View>(R.id.title)
+
+        // 상태표시줄 만큼 툴바를 내려주는 코드
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = root.paddingTop + statusBar.top
+            }
+            insets
         }
     }
 

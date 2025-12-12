@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 메인 컨텐츠 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -19,7 +18,7 @@
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
+                android:layout_height="@dimen/toolbar_height"
                 android:background="?attr/colorPrimary"
                 app:title="내 메모장"
                 app:titleTextColor="@android:color/white" />
@@ -30,58 +29,52 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="8dp"
+            android:padding="@dimen/spacing_small"
             android:background="#F5F5F5">
 
             <EditText
                 android:id="@+id/editTextSearch"
+                style="@style/AppEditText.Search"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:hint="메모 검색..."
-                android:padding="12dp"
-                android:background="@android:color/white"
-                android:drawableStart="@android:drawable/ic_menu_search"
-                android:drawablePadding="8dp" />
+                android:layout_weight="1" />
 
             <Button
                 android:id="@+id/btnClearSearch"
+                style="@style/AppButton.Outlined"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="전체"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                android:layout_marginStart="@dimen/spacing_small"
+                android:text="전체" />
         </LinearLayout>
 
-        <!-- 메모 목록 (RecyclerView) -->
+        <!-- 메모 목록 -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewNotes"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:padding="4dp" />
+            android:padding="@dimen/spacing_tiny" />
 
-        <!-- 메모 없을 때 표시 -->
+        <!-- 빈 상태 -->
         <TextView
             android:id="@+id/textViewEmpty"
+            style="@style/TextAppearance.EmptyState"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="메모가 없습니다\n+ 버튼을 눌러 추가하세요"
-            android:textSize="16sp"
-            android:textColor="#999999"
-            android:gravity="center"
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- 플로팅 액션 버튼 (FAB) - 메모 추가 -->
+    <!-- FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddNote"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
+        android:layout_margin="@dimen/margin_fab"
         android:src="@android:drawable/ic_input_add"
         app:tint="@android:color/white" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 간격 조금 증가 -->
+    <dimen name="spacing_normal">18dp</dimen>
+    <dimen name="spacing_large">28dp</dimen>
+
+    <!-- 패딩 증가 -->
+    <dimen name="padding_standard">18dp</dimen>
+    <dimen name="padding_card">18dp</dimen>
+
+    <!-- 텍스트 크기 증가 -->
+    <dimen name="text_size_normal">15sp</dimen>
+    <dimen name="text_size_medium">17sp</dimen>
+    <dimen name="text_size_large">19sp</dimen>
+
+    <dimen name="edit_text_content_height">220dp</dimen>
+</resources>

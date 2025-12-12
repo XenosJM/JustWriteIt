@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="spacing_normal">24dp</dimen>
+    <dimen name="spacing_large">40dp</dimen>
+
+    <dimen name="padding_standard">32dp</dimen>
+    <dimen name="padding_card">32dp</dimen>
+
+    <dimen name="text_size_normal">18sp</dimen>
+    <dimen name="text_size_medium">20sp</dimen>
+    <dimen name="text_size_large">24sp</dimen>
+    <dimen name="text_size_title">26sp</dimen>
+
+    <dimen name="edit_text_content_height">400dp</dimen>
+    <dimen name="card_corner_radius">16dp</dimen>
+</resources>

@@ -1,4 +1,4 @@
-package com.badger.justwriteit.data
+package com.badger.justwriteit.data.note
 
 import androidx.lifecycle.LiveData
 
@@ -108,7 +108,3 @@ class NoteRepository(
     }
 }
 */
-
-
-
-

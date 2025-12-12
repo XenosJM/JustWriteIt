@@ -1,4 +1,4 @@
-package com.badger.justwriteit.data
+package com.badger.justwriteit.data.note
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
@@ -21,11 +21,11 @@ interface NoteDAO {
      * suspend 키워드 = 코루틴에서 실행 (백그라운드 스레드)
      * @return 삽입된 행의 ID
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insert(note: Note): Long
 
     // 여러 메모 한번에 추가
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertAll(note: List<Note>)
 
     // 메모 수정, 기본적으로 Primary Key로 매칭
@@ -77,6 +77,7 @@ interface NoteDAO {
     // Flow를 사용하면 실시간 업데이트 가능
     @Query("SELECT COUNT(*) FROM notes")
     fun getNoteCount(): LiveData<Int>
+
 }
 
 // Kotlin의 suspend 함수:

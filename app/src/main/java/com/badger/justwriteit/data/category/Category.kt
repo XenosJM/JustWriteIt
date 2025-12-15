@@ -1,4 +1,4 @@
-package com.badger.justwriteit.data
+package com.badger.justwriteit.data.category
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

@@ -64,29 +64,6 @@ class NoteRepository(private  val noteDAO: NoteDAO) {
         return noteDAO.getImportantNotes()
     }
 
-    // 샘플 데이터 추가(테스트용)
-    suspend fun insertSampleData() {
-        val samples = listOf(
-            Note(
-                title = "회의 준비",
-                content = "내일 오전 10시 팀 회의 자료 준비",
-                isImportant = true
-            ),
-            Note(
-                title = "장보기",
-                content = "우유, 빵, 계란, 야채",
-                isImportant = false
-            ),
-            Note(
-                title = "운동",
-                content = "저녁 7시 헬스장 - 상체 운동",
-                isImportant = false
-            )
-        )
-
-        noteDAO.insertAll(samples)
-    }
-
 }
 
 // Repository 패턴의 장점:

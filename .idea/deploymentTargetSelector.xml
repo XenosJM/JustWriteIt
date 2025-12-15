@@ -18,10 +18,10 @@
       </SelectionState>
       <SelectionState runConfigName="JustWriteIt.app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-12-12T06:20:25.095679300Z">
+        <DropdownSelection timestamp="2025-12-15T05:22:10.420526400Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\wjdal\.android\avd\Medium_Phone_API_35.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=R3CX807P9WH" />
             </handle>
           </Target>
         </DropdownSelection>

@@ -6,6 +6,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.badger.justwriteit.data.note.Note
 import com.badger.justwriteit.data.NoteDatabase
+import com.badger.justwriteit.data.category.Category
+import com.badger.justwriteit.data.category.CategoryRepository
 import com.badger.justwriteit.data.note.NoteRepository
 import kotlinx.coroutines.launch
 
@@ -24,83 +26,114 @@ import kotlinx.coroutines.launch
 class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     // Repository 초기화(선언)
-    private val repository: NoteRepository
+    private val noteRepository: NoteRepository
+    private val categoryRepository: CategoryRepository
 
     // LiveData - UI가 관찰(Observe)하는 데이터
     // 데이터 변경시 자동으로 UI 업데이드
     val allNotes: LiveData<List<Note>>
     val noteCount: LiveData<Int>
+    val allCategories: LiveData<List<Category>>
 
     init {
         // Database 인스턴스 가져오기
-        val noteDAO = NoteDatabase.getDatabase(application).noteDAO()
+        val db = NoteDatabase.getDatabase(application)
+        val noteDAO = db.noteDAO()
+        val categoryDAO = db.categoryDAO()
 
         // Repository 생성(초기화)
-        repository = NoteRepository(noteDAO)
+        noteRepository = NoteRepository(noteDAO)
+        categoryRepository = CategoryRepository(categoryDAO)
 
         // LiveData 초기화
-        allNotes = repository.allNotes
-        noteCount = repository.noteCount
+        allNotes = noteRepository.allNotes
+        noteCount = noteRepository.noteCount
+        allCategories = categoryRepository.allCategory
     }
 
     // viewModelScope : ViewModel이 제거될 때 자동으로 취소되는 코루틴 스코프
 
     // 메모 추가
-    fun insert(note: Note) {
+    fun insertNote(note: Note) {
         viewModelScope.launch {
             // suspend 함수는 코루틴 안에서 호출해야함
-            repository.insert(note)
+            noteRepository.insert(note)
+        }
+    }
+
+    // 카테고리 추가
+    fun insertCategory(category: Category) {
+        viewModelScope.launch {
+            categoryRepository.insert(category)
         }
     }
 
     // 메모 수정
-    fun updae(note: Note) {
+    fun updateNote(note: Note) {
         viewModelScope.launch {
-            repository.update(note)
+            noteRepository.update(note)
+        }
+    }
+
+    // 카테고리 수정
+    fun updateCategory(category: Category) {
+        viewModelScope.launch {
+            categoryRepository.update(category)
         }
     }
 
     // 메모 삭제
-    fun delete(note: Note) {
+    fun deleteNote(note: Note) {
         viewModelScope.launch {
-            repository.delete(note)
+            noteRepository.delete(note)
+        }
+    }
+
+    // 카테고리 삭제
+    fun deleteCategory(category: Category){
+        viewModelScope.launch {
+            categoryRepository.delete(category)
         }
     }
 
     // ID로 메모 삭제
-    fun deleteById(noteId: Int) {
+    fun deleteByNoteId(noteId: Int) {
         viewModelScope.launch {
-            repository.deleteById(noteId)
+            noteRepository.deleteById(noteId)
         }
     }
 
     // 모든 메모 삭제
-    fun deleteAll() {
+    fun deleteAllNote() {
         viewModelScope.launch {
-            repository.deleteAll()
+            noteRepository.deleteAll()
+        }
+    }
+
+    fun deleteAllCategory() {
+        viewModelScope.launch {
+            categoryRepository.deleteAll()
         }
     }
 
     // 제목으로 검색
     fun searchByTitle(query: String): LiveData<List<Note>> {
-        return repository.searchByTitle(query)
+        return noteRepository.searchByTitle(query)
     }
 
     // 제목과 내용에서 검색
     fun searchNotes(query: String): LiveData<List<Note>> {
-        return  repository.searchNotes(query)
+        return  noteRepository.searchNotes(query)
     }
 
     // 중요메모만 가져오기
     fun getImportantNotes(): LiveData<List<Note>> {
-        return repository.getImportantNotes()
+        return noteRepository.getImportantNotes()
     }
 
-    // 샘플 데이더 추가 (테스트용)
-    fun insertSampleData(){
-        viewModelScope.launch {
-            repository.insertSampleData()
-        }
+    // 카테고리 검색
+    fun searchByCategoryName(query: String): LiveData<List<Category>> {
+        return categoryRepository.searchByCategoryName(query)
     }
 }
 

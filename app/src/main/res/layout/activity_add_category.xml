@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        style="@style/AppContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- 카테고리 이름 -->
+        <TextView
+            style="@style/TextAppearance.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_small"
+            android:text="카테고리 이름" />
+
+        <EditText
+            android:id="@+id/editTextCategoryName"
+            style="@style/AppEditText.Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_normal"
+            android:hint="예) 업무, 개인" />
+
+        <!-- 색상 선택 -->
+        <TextView
+            style="@style/TextAppearance.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_small"
+            android:text="색상 선택" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_normal"
+            android:hint="카테고리 색상">
+
+            <AutoCompleteTextView
+                android:id="@+id/dropdownCategoryColor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:focusable="false" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- 색상 미리보기 -->
+        <View
+            android:id="@+id/viewColorPreview"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginBottom="@dimen/spacing_large"
+            android:background="@android:color/darker_gray" />
+
+        <!-- 저장 버튼 -->
+        <Button
+            android:id="@+id/buttonSaveCategory"
+            style="@style/AppButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:text="저장" />
+
+    </LinearLayout>
+</ScrollView>

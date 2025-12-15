@@ -17,7 +17,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -62,14 +61,16 @@ class MainActivity : AppCompatActivity() {
             val title = data.getStringExtra("TITLE") ?: ""
             val content = data.getStringExtra("CONTENT") ?: ""
             val isImportant = data.getBooleanExtra("IMPORTANT", false)
+            val categoryId = data.getIntExtra("CATEGORY_ID", 1)
 
             // 새 메모 추가
             val note = Note(
                 title = title,
                 content = content,
-                isImportant = isImportant
+                isImportant = isImportant,
+                categoryId = categoryId
             )
-            viewModel.insert(note)
+            viewModel.insertNote(note)
             Toast.makeText(this, "메모 저장 완료", Toast.LENGTH_SHORT).show()
         }
     }
@@ -85,6 +86,7 @@ class MainActivity : AppCompatActivity() {
             val content = data.getStringExtra("CONTENT") ?: ""
             val isImportant = data.getBooleanExtra("IMPORTANT", false)
             val createdAt = data.getLongExtra("CREATED_AT", System.currentTimeMillis())
+            val categoryId = data.getIntExtra("CATEGORY_ID", 1)
 
             if (noteId != -1) {
                 val note = Note(
@@ -93,9 +95,10 @@ class MainActivity : AppCompatActivity() {
                     content = content,
                     isImportant = isImportant,
                     createdAt = createdAt,
-                    updatedAt = System.currentTimeMillis()
+                    updatedAt = System.currentTimeMillis(),
+                    categoryId = categoryId
                 )
-                viewModel.updae(note)
+                viewModel.updateNote(note)
                 Toast.makeText(this, "메모 수정 완료", Toast.LENGTH_SHORT).show()
             }
         }
@@ -310,7 +313,7 @@ class MainActivity : AppCompatActivity() {
             .setMessage("'${note.title}'를 삭제하시겠습니까?")
             .setPositiveButton("삭제") { _, _ ->
                 // 클릭 처리
-                viewModel.delete(note)
+                viewModel.deleteNote(note)
                 Toast.makeText(this, "삭제되었습니다", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("취소") { _, _ ->
@@ -332,11 +335,6 @@ class MainActivity : AppCompatActivity() {
                 showDeleteAllConfirmDialog()
                 true
             }
-            R.id.action_sample_data -> {
-                viewModel.insertSampleData()
-                Toast.makeText(this, "샘플 데이터 추가완료", Toast.LENGTH_SHORT).show()
-                true
-            }
             R.id.action_important -> {
                 viewModel.getImportantNotes().observe(this) { notes ->
                     adapter.submitList(notes)
@@ -354,7 +352,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle("모든 메모 삭제")
             .setMessage("정말로 모든 메모를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")
             .setPositiveButton("삭제") { _, _ ->
-                viewModel.deleteAll()
+                viewModel.deleteAllNote()
                 Toast.makeText(this, "모든 메모가 삭제되었습니다", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("취소", null)

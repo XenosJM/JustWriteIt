@@ -78,6 +78,10 @@ interface NoteDAO {
     @Query("SELECT COUNT(*) FROM notes")
     fun getNoteCount(): LiveData<Int>
 
+    // 카테고리 삭제시 메모의 카테고리를 기본으로 옮기는 쿼리
+    @Query("UPDATE notes SET category_id = :defaultId WHERE category_id = :categoryId")
+    suspend fun moveNotesToDefault(categoryId: Int, defaultId: Int = 1)
+
 }
 
 // Kotlin의 suspend 함수:

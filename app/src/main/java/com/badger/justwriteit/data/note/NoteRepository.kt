@@ -49,6 +49,11 @@ class NoteRepository(private  val noteDAO: NoteDAO) {
         return noteDAO.getNoteById(noteId)
     }
 
+    // 카테고리 기본으로 옮기기
+    suspend fun moveNotesToDefault(categoryId: Int) {
+        noteDAO.moveNotesToDefault(categoryId)
+    }
+
     // 제목으로 검색
     fun searchByTitle(query: String): LiveData<List<Note>> {
         return noteDAO.searchByTitle(query)

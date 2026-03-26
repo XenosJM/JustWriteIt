@@ -156,12 +156,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (Build.VERSION.SDK_INT >= 35) {
-            // API 35 이상 전용 UI 설정
-            changeUI()
-        } else {
-            // API 34 이하 UI 설정
-        }
+//        if (Build.VERSION.SDK_INT >= 35) {
+//            // API 35 이상 전용 UI 설정
+//            changeUI()
+//        } else {
+//            // API 34 이하 UI 설정
+//        }
 
         // Toolbar 설정
         setSupportActionBar(findViewById(R.id.toolbar))

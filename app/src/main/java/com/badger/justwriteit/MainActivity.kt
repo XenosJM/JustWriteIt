@@ -1,5 +1,6 @@
 package com.badger.justwriteit
 
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -9,6 +10,8 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -22,7 +25,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.badger.justwriteit.data.category.Category
+import com.badger.justwriteit.data.category.CategoryDAO
 import com.badger.justwriteit.data.note.Note
+import com.badger.justwriteit.data.note.NoteDAO
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
@@ -103,6 +109,48 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    // 카테고리 추가용 런처
+    private val addCategoryLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            val data = result.data!!
+            val title = data.getStringExtra("TITLE") ?: ""
+            val color = data.getStringExtra("COLOR") ?: ""
+
+            val category = Category(
+                title = title,
+                color = color
+            )
+            viewModel.insertCategory(category)
+            Toast.makeText(this, "카테고리 생성 완료", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 카테고리 수정 런처
+    private val editCategoryLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            val data = result.data!! // if문에서 이미 null 체크를 하기에 null일리 없다는 확신하는 사용 그게 아닐경우 사용 금지
+            val title = data.getStringExtra("CATEGORY_TITLE") ?: ""
+            val color = data.getStringExtra("CATEGORY_COLOR") ?: ""
+            val categoryId = data.getIntExtra("CATEGORY_ID", -1)
+
+            if (categoryId != -1) {
+                val category = Category(
+                    id = categoryId,
+                    title = title,
+                    color = color
+                )
+                viewModel.updateCategory(category)
+                Toast.makeText(this, "카테고리 수정 완료", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -234,13 +282,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 검색창 텍스트 변경 리스너
-        editTextSearch.addTextChangedListener(object : TextWatcher {
+        editTextSearch.setOnEditorActionListener {_, actionId, _ ->
             // TODO 제목으로 찾기와 제목과 내용으로 찾기 기능을 사용하기 위한 체크포인트를 만들어볼것
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                val query = editTextSearch.text.toString().trim()
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // 실시간 검색
-                val query = s.toString()
                 if (query.isEmpty()) {
                     // 검색어 없으면 전체 표시
                     viewModel.allNotes.observe(this@MainActivity) { notes ->
@@ -249,13 +295,18 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     // 검색 실행
                     viewModel.searchNotes(query).observe(this@MainActivity) { notes ->
+                        // 검색 실행후 키보드 닫기
+                        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.hideSoftInputFromWindow(editTextSearch.windowToken, 0)
+
                         adapter.submitList(notes)
                     }
                 }
+                true
+            } else {
+                false
             }
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
+        }
 
         // 검색 초기화 버튼
         btnClearSearch.setOnClickListener {
@@ -264,6 +315,12 @@ class MainActivity : AppCompatActivity() {
                 adapter.submitList(notes)
             }
         }
+
+        /** TODO 카테고리 목록 불러오기 기능 버튼, 카테고리 삭제는 메모가 똑같이 작동하도록 만들것
+         * 카테고리 불러오기 기능 버튼이 클릭이 되면 액션바가 생겨서 뒤로가기 버튼이 새로 생기도록 하며,
+         * fab 버튼의 기능 또한 메모 추가가 아닌 카테고리 추가 버튼으로 변경 되도록할것 또는 카테고리 목록
+         * 맨 아래 또는 맨 윗쪽에 새로 버튼영역이 생기도록하고 거길 눌러서 추가 하도록 하는 버튼을 생성할것.
+         */
     }
 
     // 스와이프로 삭제 기능
@@ -331,17 +388,26 @@ class MainActivity : AppCompatActivity() {
     // 옵션 메뉴 클릭
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            // 모든 메모 삭제 버튼
             R.id.action_delete_all -> {
                 showDeleteAllConfirmDialog()
                 true
             }
-            R.id.action_important -> {
+            // TODO 카테고리 리스트 토글버튼, 중요메모 토글 버튼으로 변경하기.
+            R.id.action_categoryList -> {
+
+                true
+            }
+
+            // 중요 메모만 표시 버튼
+            R.id.switch_important -> {
                 viewModel.getImportantNotes().observe(this) { notes ->
                     adapter.submitList(notes)
                 }
                 Toast.makeText(this, "중요 메모만 표시", Toast.LENGTH_SHORT).show()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -358,7 +424,10 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton("취소", null)
             .show()
     }
+
 }
+
+
 
 // ========================================
 // Activity Result API 설명

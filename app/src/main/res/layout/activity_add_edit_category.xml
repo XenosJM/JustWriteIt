@@ -27,7 +27,7 @@
             android:layout_marginBottom="@dimen/spacing_normal"
             android:hint="예) 업무, 개인" />
 
-        <!-- 색상 선택 -->
+        <!-- 색상 선택 섹션 -->
         <TextView
             style="@style/TextAppearance.Label"
             android:layout_width="wrap_content"
@@ -35,28 +35,43 @@
             android:layout_marginBottom="@dimen/spacing_small"
             android:text="색상 선택" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        <!--
+             클릭 영역을 넓히기 위해 레이아웃으로 감쌉니다.
+             이 전체 영역을 클릭하면 컬러 피커가 뜨도록 Kotlin에서 설정하세요.
+        -->
+        <LinearLayout
+            android:id="@+id/layoutColorPicker"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_normal"
-            android:hint="카테고리 색상">
-
-            <AutoCompleteTextView
-                android:id="@+id/dropdownCategoryColor"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="none"
-                android:focusable="false" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- 색상 미리보기 -->
-        <View
-            android:id="@+id/viewColorPreview"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="12dp"
             android:layout_marginBottom="@dimen/spacing_large"
-            android:background="@android:color/darker_gray" />
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+
+            <View
+                android:id="@+id/viewColorPreview"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:color/darker_gray" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:text="원하는 색상을 터치하여 선택하세요"
+                android:textSize="14sp"
+                android:textColor="?android:attr/textColorSecondary" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@android:drawable/ic_menu_edit"
+                app:tint="?android:attr/textColorSecondary" />
+        </LinearLayout>
 
         <!-- 저장 버튼 -->
         <Button

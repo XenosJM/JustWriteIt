@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [Note::class, Category::class], // 테이블 목록
-    version = 3, // 버전(스키마 변경시 증가)
+    version = 4, // 버전(스키마 변경시 증가)
     exportSchema = false // 스키마 히스토리 저장 여부
 )
 abstract class NoteDatabase : RoomDatabase() {
@@ -50,7 +50,7 @@ abstract class NoteDatabase : RoomDatabase() {
                     .addCallback(DatabaseCallback())
 
                     // 마이그레이션 전략(버전 업그레이드시)
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
                     // 마이그레이션 없이 재생성 (개발용, 데이터 손실!)
 //                    .fallbackToDestructiveMigration() // 마이그레이션 실패시 DB 재생성
@@ -76,35 +76,63 @@ abstract class NoteDatabase : RoomDatabase() {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // 새 컬럼 추가 예제
-                db.execSQL("""
+                db.execSQL(
+                    """
             CREATE TABLE IF NOT EXISTS categories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                 category_name TEXT NOT NULL,
                 color TEXT NOT NULL
             )
-        """.trimIndent())
-                db.execSQL("""
+        """.trimIndent()
+                )
+                db.execSQL(
+                    """
                     INSERT INTO categories (id, category_name, color)
                     VALUES (1, 'general', '#00RRGGBB')
-                """.trimIndent())
+                """.trimIndent()
+                )
             }
         }
 
-        val MIGRATION_2_3 =object : Migration(2, 3) {
+        val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
+                db.execSQL(
+                    """
                     ALTER TABLE notes ADD COLUMN category_id INTEGER NOT NULL DEFAULT 1
-                """.trimIndent())
+                """.trimIndent()
+                )
 
                 // (선택) 이미 DEFAULT 1이라 대부분 필요 없음. 명시적으로 업데이트하고 싶으면:
                 // db.execSQL("UPDATE notes SET category_id = 1 WHERE category_id IS NULL")
             }
         }
 
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    ALTER TABLE categories RENAME COLUMN category_name TO title
+                """.trimIndent()
+                )
+            }
 
+            // 샘플 데이터 추가
+            private suspend fun databaseSample(categoryDAO: CategoryDAO) {
+                // 샘플 메모 추가
+                val sampleCategories = listOf(
+                    Category(
+                        title = "기본",
+                        color = ""
+                    )
+                )
+
+                categoryDAO.insertAll(sampleCategories)
+            }
+
+
+        }
     }
 }
-
 // Kotlin 핵심 개념:
 // 1. companion object: static 멤버 (인스턴스 없이 접근)
 // 2. @Volatile: 멀티스레드 가시성 보장

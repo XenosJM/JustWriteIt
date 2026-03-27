@@ -64,6 +64,10 @@ interface NoteDAO {
     @Query("SELECT * FROM notes WHERE is_important = 1 ORDER BY created_at DESC")
     fun getImportantNotes(): LiveData<List<Note>>
 
+    // 카테고리별 메모 가져오기
+    @Query("SELECT * FROM notes WHERE category_id = :categoryId ORDER BY created_at DESC")
+    fun getNotesByCategory(categoryId: Int): LiveData<List<Note>>
+
     // 제목과 내용에서 검색, 복잡한 쿼리 예제
     @Query("""
         SELECT * FROM notes 
@@ -77,6 +81,10 @@ interface NoteDAO {
     // Flow를 사용하면 실시간 업데이트 가능
     @Query("SELECT COUNT(*) FROM notes")
     fun getNoteCount(): LiveData<Int>
+
+    // 카테고리 삭제시 메모의 카테고리를 기본으로 옮기는 쿼리
+    @Query("UPDATE notes SET category_id = :defaultId WHERE category_id = :categoryId")
+    suspend fun moveNotesToDefault(categoryId: Int, defaultId: Int = 1)
 
 }
 

@@ -29,7 +29,10 @@ data class Note(
     val updatedAt: Long = System.currentTimeMillis(),
 
     @ColumnInfo(name = "is_important")
-    val isImportant: Boolean = false  // 중요 메모 표시
+    val isImportant: Boolean = false,  // 중요 메모 표시
+
+    @ColumnInfo(name = "category_id")
+    val categoryId: Int
 
 )
 

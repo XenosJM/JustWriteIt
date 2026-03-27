@@ -81,4 +81,7 @@ dependencies {
 
     // Material Design 라이브러리
     implementation ("com.google.android.material:material:1.13.0")
+
+    // 컬러 팔레트 라이브러리
+    implementation("com.github.dhaval2404:colorpicker:2.3")
 }

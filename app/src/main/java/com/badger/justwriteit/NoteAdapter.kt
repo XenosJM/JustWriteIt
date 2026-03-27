@@ -1,5 +1,6 @@
 package com.badger.justwriteit
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.badger.justwriteit.data.category.Category
 import com.badger.justwriteit.data.note.Note
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -24,31 +26,44 @@ class NoteAdapter (
     private val onNoteLongClick: (Note) -> Unit // 롱클릭 콜백
 ) : ListAdapter<Note, NoteAdapter.NoteViewHolder>(NoteDiffCallback()) {
 
-    // ViewHolder - 각 아이템의 뷰를 보관
-    // Java의 static class와 유사하지만 더 간결함
+    private var categories: List<Category> = emptyList()
+
+    fun setCategories(categories: List<Category>) {
+        this.categories = categories
+        notifyDataSetChanged()
+    }
 
     class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titleTextView: TextView = itemView.findViewById(R.id.textViewTitle)
         private val contentTextView: TextView = itemView.findViewById(R.id.textViewContent)
         private val dateTextView: TextView = itemView.findViewById(R.id.textViewDate)
         private val importantIndicator: View = itemView.findViewById(R.id.viewImportant)
+        private val categoryTag: View = itemView.findViewById(R.id.viewCategoryTag)
 
-        // 데이터를 뷰에 바인딩
-        fun bind(note: Note, onNoteClick: (Note) -> Unit, onNoteLongClick: (Note) -> Unit) {
+        fun bind(note: Note, categories: List<Category>, onNoteClick: (Note) -> Unit, onNoteLongClick: (Note) -> Unit) {
             titleTextView.text = note.title
             contentTextView.text = note.content
             dateTextView.text = formatDate(note.createdAt)
 
-            // 중요 메모 표시
+            // 중요 메모 표시 (빨간 띠)
             importantIndicator.visibility = if (note.isImportant) View.VISIBLE else View.GONE
 
-            // 클릭 리스너
-            itemView.setOnClickListener { onNoteClick(note) }
+            // 카테고리 색상 띠 적용
+            val category = categories.find { it.id == note.categoryId }
+            if (category != null) {
+                try {
+                    categoryTag.setBackgroundColor(Color.parseColor(category.color))
+                } catch (e: Exception) {
+                    categoryTag.setBackgroundColor(Color.LTGRAY)
+                }
+            } else {
+                categoryTag.setBackgroundColor(Color.LTGRAY)
+            }
 
-            // 롱클릭 리스너 (삭제용)
+            itemView.setOnClickListener { onNoteClick(note) }
             itemView.setOnLongClickListener {
                 onNoteLongClick(note)
-                true // 이벤트 소비
+                true
             }
         }
 
@@ -70,8 +85,8 @@ class NoteAdapter (
     // ViewHolder에 데이터 바인딩
     // position에 해당하는 데이터를 표시
     override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
-        val note = getItem(position) // ListAdapter가 제공하는 함수
-        holder.bind(note, onNoteClick, onNoteLongClick)
+        val note = getItem(position)
+        holder.bind(note, categories, onNoteClick, onNoteLongClick)
     }
 
     // 특정 위치의 Note 가져오기
@@ -89,17 +104,8 @@ class NoteAdapter (
  * - 자동으로 애니메이션 적용
  */
 class NoteDiffCallback : DiffUtil.ItemCallback<Note>() {
-
-    // 같은 아이템인지 확인 (ID 비교)
-    override fun areItemsTheSame(oldItem: Note, newItem: Note): Boolean {
-        return oldItem.id == newItem.id
-    }
-
-    // 내용이 같은지 확인 (전체 데이터 비교)
-    override fun areContentsTheSame(oldItem: Note, newItem: Note): Boolean {
-        // data class는 자동으로 equals() 구현
-        return oldItem == newItem
-    }
+    override fun areItemsTheSame(oldItem: Note, newItem: Note): Boolean = oldItem.id == newItem.id
+    override fun areContentsTheSame(oldItem: Note, newItem: Note): Boolean = oldItem == newItem
 }
 
 

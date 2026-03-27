@@ -49,6 +49,11 @@ class NoteRepository(private  val noteDAO: NoteDAO) {
         return noteDAO.getNoteById(noteId)
     }
 
+    // 카테고리 기본으로 옮기기
+    suspend fun moveNotesToDefault(categoryId: Int) {
+        noteDAO.moveNotesToDefault(categoryId)
+    }
+
     // 제목으로 검색
     fun searchByTitle(query: String): LiveData<List<Note>> {
         return noteDAO.searchByTitle(query)
@@ -63,31 +68,13 @@ class NoteRepository(private  val noteDAO: NoteDAO) {
     fun getImportantNotes(): LiveData<List<Note>> {
         return noteDAO.getImportantNotes()
     }
-
-    // 샘플 데이터 추가(테스트용)
-    suspend fun insertSampleData() {
-        val samples = listOf(
-            Note(
-                title = "회의 준비",
-                content = "내일 오전 10시 팀 회의 자료 준비",
-                isImportant = true
-            ),
-            Note(
-                title = "장보기",
-                content = "우유, 빵, 계란, 야채",
-                isImportant = false
-            ),
-            Note(
-                title = "운동",
-                content = "저녁 7시 헬스장 - 상체 운동",
-                isImportant = false
-            )
-        )
-
-        noteDAO.insertAll(samples)
+    // 카테고리별 메모 가져오기
+    fun getNotesByCategory(categoryId: Int): LiveData<List<Note>> {
+        return noteDAO.getNotesByCategory(categoryId)
     }
 
 }
+
 
 // Repository 패턴의 장점:
 // 1. 단일 진실 공급원(Single Source of Truth)

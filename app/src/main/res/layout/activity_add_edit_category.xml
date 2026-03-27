@@ -11,93 +11,75 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- 제목 입력 -->
+        <!-- 카테고리 이름 -->
         <TextView
             style="@style/TextAppearance.Label"
-            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_small"
-            android:text="제목" />
+            android:text="카테고리 이름" />
 
         <EditText
-            android:id="@+id/editTextTitle"
+            android:id="@+id/editTextCategoryName"
             style="@style/AppEditText.Title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_normal" />
+            android:layout_marginBottom="@dimen/spacing_normal"
+            android:hint="예) 업무, 개인" />
 
-        <!-- 카테고리 선택 -->
+        <!-- 색상 선택 섹션 -->
         <TextView
             style="@style/TextAppearance.Label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_small"
-            android:text="카테고리" />
+            android:text="색상 선택" />
 
+        <!--
+             클릭 영역을 넓히기 위해 레이아웃으로 감쌉니다.
+             이 전체 영역을 클릭하면 컬러 피커가 뜨도록 Kotlin에서 설정하세요.
+        -->
         <LinearLayout
-            android:id="@+id/layoutCategorySelect"
+            android:id="@+id/layoutColorPicker"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:padding="12dp"
-            android:layout_marginBottom="@dimen/spacing_normal"
-            android:background="@android:drawable/editbox_background"
+            android:layout_marginBottom="@dimen/spacing_large"
+            android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true">
 
             <View
-                android:id="@+id/viewCategoryColor"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:id="@+id/viewColorPreview"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="@android:color/darker_gray" />
 
             <TextView
-                android:id="@+id/textViewCategoryName"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="12dp"
-                android:text="카테고리 선택"
-                android:textSize="16sp" />
+                android:layout_marginStart="16dp"
+                android:text="원하는 색상을 터치하여 선택하세요"
+                android:textSize="14sp"
+                android:textColor="?android:attr/textColorSecondary" />
 
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@android:drawable/arrow_down_float" />
+                android:src="@android:drawable/ic_menu_edit"
+                app:tint="?android:attr/textColorSecondary" />
         </LinearLayout>
 
-        <!-- 내용 입력 -->
-        <TextView
-            style="@style/TextAppearance.Label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_small"
-            android:text="내용" />
-
-        <EditText
-            android:id="@+id/editTextContent"
-            style="@style/AppEditText.Content"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_normal" />
-
-        <!-- 중요 체크박스 -->
-        <CheckBox
-            android:id="@+id/checkBoxImportant"
-            style="@style/AppCheckBox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_large"
-            android:text="중요 메모로 표시" />
-
-        <!-- 저장 버튼 -->
+        <!-- 저장 버튼 (textColor 제거) -->
         <Button
-            android:id="@+id/buttonSave"
+            android:id="@+id/buttonSaveCategory"
             style="@style/AppButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="저장" />
+
     </LinearLayout>
 </ScrollView>

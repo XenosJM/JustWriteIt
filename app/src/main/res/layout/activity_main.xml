@@ -25,28 +25,69 @@
                 app:titleTextColor="@android:color/white" />
         </com.google.android.material.appbar.AppBarLayout>
 
+        <!-- 필터 버튼 영역 (전체, 중요, 카테고리) -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#F5F5F5"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="@dimen/spacing_small">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnShowAll"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="전체"
+                    android:layout_marginEnd="@dimen/spacing_tiny"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnToggleImportant"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="중요표시"
+                    android:checkable="true"
+                    android:layout_marginEnd="@dimen/spacing_tiny"
+                    app:icon="@android:drawable/btn_star_big_off"
+                    app:iconGravity="textStart"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCategoryFilter"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="카테고리"
+                    app:icon="@android:drawable/ic_menu_sort_by_size"
+                    app:iconGravity="textStart"/>
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
         <!-- 검색창 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="@dimen/spacing_small"
+            android:paddingHorizontal="@dimen/spacing_small"
+            android:paddingBottom="@dimen/spacing_small"
             android:background="#F5F5F5">
 
             <EditText
                 android:id="@+id/editTextSearch"
-                style="@style/AppEditText.Search"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:hint="검색어를 입력하세요"
+                android:background="@android:drawable/edit_text"
+                android:padding="@dimen/spacing_small"
+                android:imeOptions="actionSearch"
+                android:inputType="text"/>
 
-            <Button
-                android:id="@+id/btnClearSearch"
-                style="@style/AppButton.Outlined"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/spacing_small"
-                android:text="전체" />
         </LinearLayout>
 
         <!-- 메모 목록 -->
@@ -61,11 +102,11 @@
         <!-- 빈 상태 -->
         <TextView
             android:id="@+id/textViewEmpty"
-            style="@style/TextAppearance.EmptyState"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="메모가 없습니다\n+ 버튼을 눌러 추가하세요"
+            android:gravity="center"
             android:visibility="gone" />
     </LinearLayout>
 

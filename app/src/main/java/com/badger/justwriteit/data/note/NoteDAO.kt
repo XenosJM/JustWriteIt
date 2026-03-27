@@ -64,6 +64,10 @@ interface NoteDAO {
     @Query("SELECT * FROM notes WHERE is_important = 1 ORDER BY created_at DESC")
     fun getImportantNotes(): LiveData<List<Note>>
 
+    // 카테고리별 메모 가져오기
+    @Query("SELECT * FROM notes WHERE category_id = :categoryId ORDER BY created_at DESC")
+    fun getNotesByCategory(categoryId: Int): LiveData<List<Note>>
+
     // 제목과 내용에서 검색, 복잡한 쿼리 예제
     @Query("""
         SELECT * FROM notes 

@@ -73,13 +73,12 @@
                 app:tint="?android:attr/textColorSecondary" />
         </LinearLayout>
 
-        <!-- 저장 버튼 -->
+        <!-- 저장 버튼 (textColor 제거) -->
         <Button
             android:id="@+id/buttonSaveCategory"
             style="@style/AppButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/black"
             android:text="저장" />
 
     </LinearLayout>

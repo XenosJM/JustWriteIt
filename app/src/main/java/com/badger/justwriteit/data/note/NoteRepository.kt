@@ -68,8 +68,13 @@ class NoteRepository(private  val noteDAO: NoteDAO) {
     fun getImportantNotes(): LiveData<List<Note>> {
         return noteDAO.getImportantNotes()
     }
+    // 카테고리별 메모 가져오기
+    fun getNotesByCategory(categoryId: Int): LiveData<List<Note>> {
+        return noteDAO.getNotesByCategory(categoryId)
+    }
 
 }
+
 
 // Repository 패턴의 장점:
 // 1. 단일 진실 공급원(Single Source of Truth)

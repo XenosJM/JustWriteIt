@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 각 메모 아이템의 레이아웃 -->
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/AppCardView"
@@ -12,14 +11,22 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <!-- 중요 표시 -->
+        <!-- 중요 표시 (빨간색 띠) -->
         <View
             android:id="@+id/viewImportant"
             android:layout_width="@dimen/important_indicator_width"
             android:layout_height="match_parent"
-            android:layout_marginEnd="@dimen/spacing_medium"
+            android:layout_marginEnd="4dp"
             android:background="#FF5252"
             android:visibility="gone" />
+
+        <!-- 카테고리 색상 표시 (선택된 카테고리 색상 띠) -->
+        <View
+            android:id="@+id/viewCategoryTag"
+            android:layout_width="@dimen/important_indicator_width"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/spacing_medium"
+            android:background="#9E9E9E" />
 
         <!-- 메모 내용 -->
         <LinearLayout

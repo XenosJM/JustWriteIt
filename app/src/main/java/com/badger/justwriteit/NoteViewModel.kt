@@ -134,7 +134,10 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         return noteRepository.getImportantNotes()
     }
 
-    // 카테고리 검색
+    fun getNotesByCategory(categoryId: Int): LiveData<List<Note>> {
+        return noteRepository.getNotesByCategory(categoryId)
+    }
+
     fun searchByCategoryName(query: String): LiveData<List<Category>> {
         return categoryRepository.searchByCategoryName(query)
     }

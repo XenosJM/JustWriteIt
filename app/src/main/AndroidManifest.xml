@@ -9,12 +9,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
+        android:theme="@style/Theme.JustWriteIt"
         >
         <activity
             android:name="com.badger.justwriteit.MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.JustWriteIt">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -25,6 +24,11 @@
             android:name="com.badger.justwriteit.AddEditNoteActivity"
             android:parentActivityName="com.badger.justwriteit.MainActivity"
             android:windowSoftInputMode="adjustResize" />
+
+        <!-- 카테고리 추가/수정 액티비티 -->
+        <activity
+            android:name="com.badger.justwriteit.AddEditCategoryActivity"
+            android:parentActivityName="com.badger.justwriteit.MainActivity" />
     </application>
 
 </manifest>

@@ -92,6 +92,9 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     // 카테고리 삭제
     fun deleteCategory(category: Category){
         viewModelScope.launch {
+            // 삭제 해당 카테고리 사용하는 메모를 모두 기본으로 바꾸기
+            noteRepository.moveNotesToDefault(category.id)
+            // 카테고리 삭제
             categoryRepository.delete(category)
         }
     }
@@ -131,7 +134,10 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         return noteRepository.getImportantNotes()
     }
 
-    // 카테고리 검색
+    fun getNotesByCategory(categoryId: Int): LiveData<List<Note>> {
+        return noteRepository.getNotesByCategory(categoryId)
+    }
+
     fun searchByCategoryName(query: String): LiveData<List<Category>> {
         return categoryRepository.searchByCategoryName(query)
     }

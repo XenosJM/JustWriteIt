@@ -3,12 +3,14 @@ package com.badger.justwriteit
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -17,6 +19,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -129,6 +134,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Edge-to-Edge 설정: 상태표시줄과 내비게이션바 영역까지 배경을 확장합니다.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
         setContentView(R.layout.activity_main)
 
         // Toolbar 설정
@@ -136,6 +145,9 @@ class MainActivity : AppCompatActivity() {
 
         // View 초기화
         initViews()
+        
+        // 시스템 바 영역 확보: UI 요소들이 상태표시줄이나 내비게이션 바에 가려지지 않게 패딩을 추가합니다.
+        setupEdgeToEdge()
 
         // ViewModel 초기화
         // ViewModelProvider가 ViewModel 생명주기를 관리함
@@ -173,6 +185,37 @@ class MainActivity : AppCompatActivity() {
         btnShowAll = findViewById(R.id.btnShowAll)
         btnToggleImportant = findViewById(R.id.btnToggleImportant)
         btnCategoryFilter = findViewById(R.id.btnCategoryFilter)
+    }
+
+    /**
+     * 화면 최상위 뷰에 시스템 바(상태바, 내비게이션바)만큼 패딩을 주어 콘텐츠 가려짐 방지
+     */
+    private fun setupEdgeToEdge() {
+        val rootLayout = findViewById<View>(android.R.id.content)
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            windowInsets
+        }
+    }
+
+    /**
+     * 화면의 빈 공간이나 다른 뷰를 탭했을 때 EditText의 포커스를 해제하고 키보드를 숨깁니다.
+     */
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        if (ev?.action == MotionEvent.ACTION_DOWN) {
+            val v = currentFocus
+            if (v is EditText) {
+                val outRect = Rect()
+                v.getGlobalVisibleRect(outRect)
+                if (!outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
+                    v.clearFocus()
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.windowToken, 0)
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     private fun setNotesSource(source: LiveData<List<Note>>) {
@@ -232,6 +275,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(editTextSearch.windowToken, 0)
+                editTextSearch.clearFocus()
                 true
             } else false
         }
@@ -510,6 +554,3 @@ launcher.launch(intent)
 
 
  */
-
-
-

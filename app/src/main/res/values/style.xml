@@ -74,7 +74,7 @@
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
 
-    <!-- Card 스타일 -->
+    <!-- Card 스타일WWS -->
     <style name="AppCardView" parent="Widget.MaterialComponents.CardView">
         <item name="cardCornerRadius">@dimen/card_corner_radius</item>
         <item name="cardElevation">@dimen/card_elevation</item>

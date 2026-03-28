@@ -1,14 +1,18 @@
 package com.badger.justwriteit
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -16,8 +20,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.ViewModelProvider
 import com.badger.justwriteit.data.category.Category
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -50,19 +54,19 @@ class AddEditNoteActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Edge-to-Edge 설정 (배경 확장)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
         setContentView(R.layout.activity_add_edit_note)
 
         viewModel = ViewModelProvider(this)[NoteViewModel::class.java]
 
-        if (Build.VERSION.SDK_INT >= 35) {
-            // API 35 이상 전용 UI 설정
-            changeUI()
-        } else {
-            // API 34 이하 UI 설정
-        }
-
         // View 초기화
         initViews()
+        
+        // Edge-to-Edge 패딩 설정 (콘텐츠 겹침 방지)
+        setupEdgeToEdge()
         
         // Intent에서 데이터 가져오기
         loadNoteData()
@@ -96,19 +100,35 @@ class AddEditNoteActivity : AppCompatActivity() {
         textViewCategoryName = findViewById(R.id.textViewCategoryName)
     }
 
-    // Build 버전에 따른UI 변경 함수
-    private fun changeUI() {
-        //TODO 바꿔야함
-        val root = findViewById<View>(R.id.title)
-
-        // 상태표시줄 만큼 툴바를 내려주는 코드
-        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
-            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = root.paddingTop + statusBar.top
-            }
-            insets
+    /**
+     * 상태표시줄과 내비게이션 바 영역을 계산하여 최상위 뷰에 패딩 적용
+     */
+    private fun setupEdgeToEdge() {
+        val rootLayout = findViewById<View>(android.R.id.content)
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            windowInsets
         }
+    }
+
+    /**
+     * 화면의 빈 공간이나 다른 뷰를 탭했을 때 EditText의 포커스를 해제하고 키보드를 숨깁니다.
+     */
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        if (ev?.action == MotionEvent.ACTION_DOWN) {
+            val v = currentFocus
+            if (v is EditText) {
+                val outRect = Rect()
+                v.getGlobalVisibleRect(outRect)
+                if (!outRect.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
+                    v.clearFocus()
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.windowToken, 0)
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     // Intent에서 메모 데이터 로드
@@ -163,7 +183,9 @@ class AddEditNoteActivity : AppCompatActivity() {
         if (category != null) {
             textViewCategoryName.text = category.title
             try {
-                viewCategoryColor.setBackgroundColor(Color.parseColor(category.color))
+                val color = Color.parseColor(category.color)
+                viewCategoryColor.setBackgroundColor(color)
+                updateStatusBarColor(category.color) // 카테고리 색상에 맞춰 상태바 업데이트
             } catch (e: Exception) {
                 viewCategoryColor.setBackgroundColor(Color.LTGRAY)
             }
@@ -174,13 +196,30 @@ class AddEditNoteActivity : AppCompatActivity() {
                 if (found != null) {
                     textViewCategoryName.text = found.title
                     try {
-                        viewCategoryColor.setBackgroundColor(Color.parseColor(found.color))
+                        val color = Color.parseColor(found.color)
+                        viewCategoryColor.setBackgroundColor(color)
+                        updateStatusBarColor(found.color)
                     } catch (e: Exception) {
                         viewCategoryColor.setBackgroundColor(Color.LTGRAY)
                     }
                 }
             }
         }
+    }
+
+    /**
+     * 상태 표시줄 배경색을 변경하고 아이콘 가독성을 확보합니다.
+     */
+    private fun updateStatusBarColor(colorHex: String) {
+        try {
+            val color = Color.parseColor(colorHex)
+            window.statusBarColor = color
+            
+            // 색상 밝기에 따라 아이콘 색상 반전 (WindowInsetsController 사용)
+            val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+            val darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255
+            windowInsetsController.isAppearanceLightStatusBars = darkness < 0.5
+        } catch (e: Exception) {}
     }
 
     private fun saveNote() {

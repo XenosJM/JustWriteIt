@@ -3,18 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/switch_important"
-        android:title="중요 메모"
-        app:showAsAction="ifRoom" />
-
-    <item
         android:id="@+id/action_delete_all"
         android:title="모두 삭제"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/action_categoryList"
-        android:title="카테고리 목록"
-        app:showAsAction="never"
-        />
 </menu>

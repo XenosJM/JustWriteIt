@@ -15,9 +15,30 @@
         <item name="colorOnSecondaryContainer">@color/white</item>
 
         <!-- Status Bar -->
-        <item name="android:statusBarColor">@color/black</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- 다이얼로그 테마 설정 (여기가 핵심입니다) -->
+        <item name="materialAlertDialogTheme">@style/Theme.JustWriteIt.Dialog</item>
+        <!-- 일부 라이브러리 호환성을 위해 추가 -->
+        <item name="alertDialogTheme">@style/Theme.JustWriteIt.Dialog</item>
     </style>
 
     <style name="Theme.JustWriteIt" parent="Base.Theme.JustWriteIt" />
+
+    <!-- 버튼 스타일: 가독성을 위해 검정색 굵은 글씨 지정 -->
+    <style name="Theme.JustWriteIt.DialogButton" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">@color/purple_700</item>
+    </style>
+
+    <style name="Theme.JustWriteIt.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/purple_700</item>
+        <item name="colorAccent">@color/purple_700</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="android:windowBackground">@color/white</item>
+
+        <!-- 팝업 하단 버튼 스타일을 명시적으로 연결 -->
+        <item name="buttonBarPositiveButtonStyle">@style/Theme.JustWriteIt.DialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Theme.JustWriteIt.DialogButton</item>
+    </style>
 </resources>
